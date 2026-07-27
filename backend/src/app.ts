@@ -48,6 +48,7 @@ export function createApp() {
   app.use(legalRouter);
 
   app.get("/health", (_req, res) => res.status(200).json({ ok: true }));
+  app.get("/api/health", (_req, res) => res.status(200).json({ ok: true }));
   app.get("/health/db", async (_req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
