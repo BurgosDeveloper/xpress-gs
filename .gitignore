@@ -1,0 +1,47 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+*.p8
+*.pem
+*.key
+*.keystore
+*.jks
+*-firebase-adminsdk-*.json
+
+# Build outputs and temporary files
+dist/
+**/dist/
+build/
+**/build/
+.expo/
+**/.expo/
+.next/
+tmp/
+export/
+**/export/
+
+# Android native build files
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/.idea/
+frontend/android/local.properties
+
+# iOS native build files
+frontend/ios/Pods/
+frontend/ios/build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini

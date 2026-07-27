@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Xpress Traslados",
+    "slug": "xpresstraslados",
+    "version": "1.0.24",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.xpress.sc",
+      "buildNumber": "30",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Xpress Traslados usa tu ubicación para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.xpress.sc",
+      "versionCode": 30,
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "android.permission.CAMERA"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "enableBackgroundRemoteNotifications": false,
+          "sounds": [
+            "./assets/notifications/tienes_servicio.mp3",
+            "./assets/notifications/aceptar_servicio.mp3",
+            "./assets/notifications/uber_llego.mp3",
+            "./assets/notifications/disponibles.mp3"
+          ]
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Xpress Traslados usa tu ubicación para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+          "locationAlwaysAndWhenInUsePermission": "Xpress Traslados usa tu ubicación en segundo plano para que tus pasajeros y la operadora vean tu ubicación en tiempo real durante el servicio.",
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      "@rnmapbox/maps",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bf22f95f-5fa2-4b14-a19a-53a285c97d66"
+      }
+    }
+  }
+}

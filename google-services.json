@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "200876537008",
+    "project_id": "xpress-67d86",
+    "storage_bucket": "xpress-67d86.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200876537008:android:1bdd78eba60e2cf2793775",
+        "android_client_info": {
+          "package_name": "com.xpress.sc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmdAgA6_sDgjoU7l4FsX5TP4G8JGjbeaQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

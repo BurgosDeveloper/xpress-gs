@@ -1,0 +1,8 @@
+### APIS y ARCHIVOS de servicios externos para el funcionamiento de la app que requiero buscar:
+
+## 1. API MAPBOX
+## 2. API CLOUDINARY
+## 3. FIREBASE PARA NOTIFICACIONES
+## 4. FIREBASE PARA GOOGLE SERVICE
+## 5. APN APPLE DEVELOPER
+## 6. INICIALIZAR PROYECTO CON EXPOGO
