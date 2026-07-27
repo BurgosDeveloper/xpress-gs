@@ -74,7 +74,11 @@ function main() {
   }
 
   console.log('[railway] running prisma migrate deploy')
-  const migrateCode = run(process.execPath, [prismaCli, 'migrate', 'deploy'], { DATABASE_URL: migrationDbUrl })
+  let migrateCode = run(process.execPath, [prismaCli, 'migrate', 'deploy'], { DATABASE_URL: migrationDbUrl })
+  if (migrateCode !== 0) {
+    console.log('[railway] migrate deploy encountered existing schema, falling back to prisma db push...')
+    migrateCode = run(process.execPath, [prismaCli, 'db', 'push', '--accept-data-loss', '--skip-generate'], { DATABASE_URL: migrationDbUrl })
+  }
   if (migrateCode !== 0) process.exit(migrateCode)
 
   console.log('[railway] starting server')
