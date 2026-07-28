@@ -41,6 +41,9 @@ const EnvSchema = z.object({
   CLOUDINARY_FOLDER: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
 
   // Push notifications (FCM)
+  FCM_PROJECT_ID: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  FCM_CLIENT_EMAIL: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+  FCM_PRIVATE_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   FCM_SERVICE_ACCOUNT_PATH: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   FCM_SERVICE_ACCOUNT_JSON: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   FCM_SERVICE_ACCOUNT_JSON_B64: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
