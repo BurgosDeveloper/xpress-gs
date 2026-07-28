@@ -18,6 +18,7 @@
       "buildNumber": "33",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Xpress Traslados usa tu ubicación para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Xpress Traslados usa tu ubicación en segundo plano para que tus pasajeros y la operadora vean tu ubicación en tiempo real durante el servicio.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
