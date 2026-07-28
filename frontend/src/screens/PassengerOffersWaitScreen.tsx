@@ -358,7 +358,7 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
             const canMap = Boolean(pickup && Number.isFinite(driverLat) && Number.isFinite(driverLng));
 
             return (
-              <Card key={d.driverId} style={{ gap: 10 }}>
+              <Card key={d.driverId} style={{ gap: 12 }}>
                 <View style={styles.itemHeader}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
                     {d.photoUrl ? (
@@ -385,6 +385,9 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
                           <Text style={styles.itemMetaText}>{serviceTypeLabel(d.serviceType as any)}</Text>
                         </View>
                       ) : null}
+                    </View>
+                  </View>
+
                   <View style={styles.offeredBadge}>
                     <Ionicons name="checkmark-circle-outline" size={14} color={colors.neon} />
                     <Text style={styles.offeredBadgeText}>Postulado</Text>
