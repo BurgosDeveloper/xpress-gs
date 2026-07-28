@@ -57,12 +57,13 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
 
-  const [actionDriverId, setActionDriverId] = useState<string | null>(null);
+  const [selectingDriverId, setSelectingDriverId] = useState<string | null>(null);
+  const [rejectingDriverId, setRejectingDriverId] = useState<string | null>(null);
+  const [techLoadingDriverId, setTechLoadingDriverId] = useState<string | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
 
   const [techOpen, setTechOpen] = useState(false);
   const [techDriver, setTechDriver] = useState<any | null>(null);
-  const [techLoading, setTechLoading] = useState(false);
 
   const refreshSeq = useRef(0);
   const firstLoadRef = useRef(true);
@@ -173,7 +174,7 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
   async function openTechSheet(driverId: string) {
     if (!token) return;
 
-    setTechLoading(true);
+    setTechLoadingDriverId(driverId);
     try {
       const res = await apiGetDriverTechSheet(token, { driverId });
       setTechDriver(res.driver);
@@ -181,14 +182,14 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo cargar la ficha técnica");
     } finally {
-      setTechLoading(false);
+      setTechLoadingDriverId(null);
     }
   }
 
   async function selectDriver(driver: RideOfferItem) {
     if (!token) return;
 
-    setActionDriverId(driver.driverId);
+    setSelectingDriverId(driver.driverId);
     setError(null);
     try {
       const matched = await apiSelectRideDriver(token, { rideId, driverId: driver.driverId });
@@ -196,14 +197,14 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo seleccionar el ejecutivo");
     } finally {
-      setActionDriverId(null);
+      setSelectingDriverId(null);
     }
   }
 
   async function rejectDriver(driver: RideOfferItem) {
     if (!token) return;
 
-    setActionDriverId(driver.driverId);
+    setRejectingDriverId(driver.driverId);
     setError(null);
     try {
       await apiRejectRideOffer(token, { rideId, driverId: driver.driverId });
@@ -211,7 +212,7 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo quitar el ejecutivo");
     } finally {
-      setActionDriverId(null);
+      setRejectingDriverId(null);
     }
   }
 
@@ -351,7 +352,10 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
 
         <View style={{ gap: 12, marginTop: 16 }}>
           {items.map((d) => {
-            const busy = actionDriverId === d.driverId;
+            const isSelecting = selectingDriverId === d.driverId;
+            const isRejecting = rejectingDriverId === d.driverId;
+            const isTechLoading = techLoadingDriverId === d.driverId;
+            const isAnyBusy = isSelecting || isRejecting || isTechLoading;
 
             const driverLat = Number(d.driverLocation?.lat);
             const driverLng = Number(d.driverLocation?.lng);
@@ -407,20 +411,24 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <View style={{ flex: 1 }}>
                     <SecondaryButton
-                      label={techLoading ? "Cargando ficha..." : "Ficha técnica"}
+                      label={isTechLoading ? "Cargando..." : "Ficha técnica"}
                       onPress={() => void openTechSheet(d.driverId)}
-                      disabled={techLoading || busy}
+                      disabled={isAnyBusy}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <SecondaryButton label={busy ? "Quitando..." : "Quitar"} onPress={() => void rejectDriver(d)} disabled={busy} />
+                    <SecondaryButton
+                      label={isRejecting ? "Quitando..." : "Quitar"}
+                      onPress={() => void rejectDriver(d)}
+                      disabled={isAnyBusy}
+                    />
                   </View>
                 </View>
 
                 <PrimaryButton
-                  label={busy ? "Seleccionando..." : "Seleccionar ejecutivo"}
+                  label={isSelecting ? "Seleccionando..." : "Seleccionar ejecutivo"}
                   onPress={() => void selectDriver(d)}
-                  disabled={busy}
+                  disabled={isAnyBusy}
                 />
               </Card>
             );
