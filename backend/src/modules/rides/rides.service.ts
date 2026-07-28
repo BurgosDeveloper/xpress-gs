@@ -918,8 +918,8 @@ export async function listRideOffersForPassenger(params: { userId: string; rideI
       };
     })
     .filter((x): x is NonNullable<typeof x> => Boolean(x))
-    // Refiltramos por radio vigente para que la lista se mantenga consistente
-    .filter((x) => x.distanceMeters <= ride.searchRadiusM)
+    // Permite ofertas vigentes registradas sin descartar postulados por pequeños ajustes de GPS
+    .filter((x) => x.distanceMeters <= Math.max(ride.searchRadiusM || 2000, 50000))
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
     .slice(0, 50);
 
