@@ -385,9 +385,10 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
                           <Text style={styles.itemMetaText}>{serviceTypeLabel(d.serviceType as any)}</Text>
                         </View>
                       ) : null}
-                    </View>
+                  <View style={styles.offeredBadge}>
+                    <Ionicons name="checkmark-circle-outline" size={14} color={colors.neon} />
+                    <Text style={styles.offeredBadgeText}>Postulado</Text>
                   </View>
-                  <TimerBar durationMs={15000} onExpire={() => void rejectDriver(d)} />
                 </View>
 
                 {canMap ? (
@@ -572,5 +573,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     alignItems: "center",
     justifyContent: "center",
+  },
+  offeredBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0, 0, 255, 0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.neon,
+  },
+  offeredBadgeText: {
+    color: colors.neon,
+    fontWeight: "900",
+    fontSize: 12,
   },
 });

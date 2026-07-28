@@ -665,6 +665,12 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
       pickupLat: { gte: box.minLat, lte: box.maxLat },
       pickupLng: { gte: box.minLng, lte: box.maxLng },
       passenger: { is: { user: { is: { isActive: true } } } },
+      candidates: {
+        none: {
+          driverId: driver.id,
+          status: { in: [RideCandidateStatus.REJECTED, RideCandidateStatus.SELECTED, RideCandidateStatus.WITHDRAWN] },
+        },
+      },
     },
     include: {
       passenger: {
@@ -945,9 +951,15 @@ export async function rejectRideOfferForPassenger(params: { userId: string; ride
   const updated = await prisma.rideCandidate.update({
     where: { id: existing.id },
     data: { status: RideCandidateStatus.REJECTED },
+    include: { driver: { select: { userId: true } } },
   });
 
   emitToUser(params.userId, "ride:offers:changed", { rideId: ride.id });
+
+  if (updated.driver?.userId) {
+    emitToUser(updated.driver.userId, "driver:nearby:changed", { rideId: ride.id, type: "OFFER_UNAVAILABLE" });
+    emitToUser(updated.driver.userId, "ride:changed", { rideId: ride.id, type: "RIDE_OFFER_REJECTED" });
+  }
 
   return { ok: true as const, candidate: updated };
 }
