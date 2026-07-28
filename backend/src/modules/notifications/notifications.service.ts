@@ -108,24 +108,29 @@ export async function sendPushToUser(params: {
       }
       failed += androidTokens.length;
     } else {
-    const androidData: Record<string, string> = { ...baseData };
+      const androidData: Record<string, string> = { ...baseData };
+      const channelId = androidChannelIdForSound(soundName);
 
-    const channelId = androidChannelIdForSound(soundName);
+      try {
+        const resAndroid = await messaging.sendEachForMulticast({
+          tokens: androidTokens,
+          notification: { title: params.title, body: params.body },
+          data: androidData,
+          android: {
+            priority: "high",
+            notification: {
+              channelId,
+            },
+          },
+        });
 
-    const resAndroid = await messaging.sendEachForMulticast({
-      tokens: androidTokens,
-      notification: { title: params.title, body: params.body },
-      data: androidData,
-      android: {
-        priority: "high",
-        notification: {
-          channelId,
-        },
-      },
-    });
-
-    sent += resAndroid.successCount;
-    failed += resAndroid.failureCount;
+        sent += resAndroid.successCount;
+        failed += resAndroid.failureCount;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("[push] error sending FCM multicast notification:", err);
+        failed += androidTokens.length;
+      }
     }
   }
 
