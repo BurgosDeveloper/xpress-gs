@@ -143,6 +143,12 @@ export function AdminDriverUpsertScreen({ route, navigation }: Props) {
   }
 
   async function pickAndUploadImage(category: string, opts?: { allowsEditing?: boolean }) {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Permiso denegado", "Se requiere permiso de acceso a la galería para subir imágenes.");
+      return null;
+    }
+
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.85,
