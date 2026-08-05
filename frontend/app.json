@@ -2,7 +2,7 @@
   "expo": {
     "name": "Xpress Traslados",
     "slug": "xpress",
-    "version": "1.0.28",
+    "version": "1.0.29",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.xpress.sc",
-      "buildNumber": "34",
+      "buildNumber": "35",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Xpress Traslados usa tu ubicación para mostrar el mapa, calcular rutas y actualizar tus viajes en tiempo real.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Xpress Traslados usa tu ubicación en segundo plano para que tus pasajeros y la operadora vean tu ubicación en tiempo real durante el servicio.",
@@ -24,7 +24,7 @@
     },
     "android": {
       "package": "com.xpress.sc",
-      "versionCode": 34,
+      "versionCode": 35,
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": [
         "android.permission.CAMERA"

@@ -1,6 +1,6 @@
 const API_SUFFIX = "/api";
 
-const DEFAULT_PROD_API_BASE_URL = "https://xpress-production-c897.up.railway.app/api";
+const DEFAULT_PROD_API_BASE_URL = "https://xpress-production-cb01.up.railway.app/api";
 
 function guessLanApiBaseUrl() {
   try {
@@ -23,11 +23,15 @@ export function getApiBaseUrl() {
   const fromEnv = process.env.EXPO_PUBLIC_API_BASE_URL;
   if (fromEnv && fromEnv.trim()) return fromEnv.trim();
 
-  // Intentar adivinar la IP local (LAN) para desarrollo local con Metro/Expo Go
+  // En producción (APKs e IPAs independientes), usar SIEMPRE el servidor seguro HTTPS en Railway
+  if (!__DEV__) {
+    return DEFAULT_PROD_API_BASE_URL;
+  }
+
+  // Únicamente en desarrollo local (__DEV__ con Expo Go), intentar adivinar la IP local
   const guessed = guessLanApiBaseUrl();
   if (guessed) return guessed;
 
-  // Fallback a producción en Railway para APKs independientes
   return DEFAULT_PROD_API_BASE_URL;
 }
 
