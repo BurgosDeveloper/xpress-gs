@@ -436,29 +436,19 @@ export async function createRide(params: {
 
   emitToUser(params.userId, "ride:created", { rideId: ride.id });
 
-  // Push a choferes disponibles dentro del radio.
-  // Fire-and-forget: no bloquea la creación.
+  // Push instantáneo a TODOS los choferes aprobados y disponibles del tipo de vehículo solicitado.
+  // Fire-and-forget: no bloquea la respuesta del cliente.
   void (async () => {
     try {
       const pickup = { lat: Number(ride.pickupLat), lng: Number(ride.pickupLng) };
-      const radiusM = Math.max(250, Math.min(50_000, Number(ride.searchRadiusM ?? params.searchRadiusM ?? 2000)));
-      const radiusKm = radiusM / 1000;
-      const box = boundingBoxKm(pickup, radiusKm);
-      const freshSince = driverLocationFreshSince();
 
+      // Buscar todos los choferes aprobados y disponibles que concuerden con el tipo de vehículo solicitado
       const drivers = await prisma.driverProfile.findMany({
         where: {
           status: DriverStatus.APPROVED,
           isAvailable: true,
           user: { is: { isActive: true } },
           serviceType: ride.serviceTypeWanted,
-          location: {
-            is: {
-              updatedAt: { gte: freshSince },
-              lat: { gte: box.minLat, lte: box.maxLat },
-              lng: { gte: box.minLng, lte: box.maxLng },
-            },
-          },
           matchedRides: {
             none: {
               status: { in: [RideStatus.ASSIGNED, RideStatus.ACCEPTED, RideStatus.MATCHED, RideStatus.IN_PROGRESS] },
@@ -475,12 +465,11 @@ export async function createRide(params: {
       const targets = drivers
         .map((d) => {
           const loc = d.location ? { lat: Number(d.location.lat), lng: Number(d.location.lng) } : null;
-          const dist = loc ? haversineDistanceMeters(pickup, loc) : Number.NaN;
+          const dist = loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) ? haversineDistanceMeters(pickup, loc) : 0;
           return { userId: d.userId, distanceMeters: Math.round(dist) };
         })
-        .filter((x) => Number.isFinite(x.distanceMeters) && x.distanceMeters <= radiusM)
         .sort((a, b) => a.distanceMeters - b.distanceMeters)
-        .slice(0, 50);
+        .slice(0, 100);
 
       emitToUsers(
         targets.map((t) => t.userId),
@@ -488,19 +477,24 @@ export async function createRide(params: {
         { type: "RIDE_AVAILABLE", rideId: ride.id, eventId: `RIDE_AVAILABLE:${ride.id}` }
       );
 
+      const modeText = params.serviceModeWanted === "DELIVERY" ? "Delivery" : params.serviceModeWanted === "ENVIO" ? "Envío" : "Traslado";
+      const title = `🚖 ¡Nuevo servicio de ${modeText}!`;
+      const body = `Un cliente solicitó servicio (${params.serviceTypeWanted}). ¡Ingresa para enviar tu propuesta!`;
+
       await Promise.all(
         targets.map((t) =>
           sendPushToUser({
             userId: t.userId,
-            title: "Solicitud cerca",
-            body: "Nuevo cliente solicitó un servicio.",
+            title,
+            body,
             soundName: "disponibles",
             data: { rideId: ride.id, type: "RIDE_AVAILABLE", eventId: `RIDE_AVAILABLE:${ride.id}` },
           }).catch(() => null)
         )
       );
-    } catch {
-      // silencioso
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[rides] error sending push to drivers on ride creation:", err);
     }
   })();
 
