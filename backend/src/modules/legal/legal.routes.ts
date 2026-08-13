@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-const APP_NAME = "STAR TRASLADOS C.A";
+const APP_NAME = "XPRESS TRASLADOS C.A";
 const EFFECTIVE_DATE = "23 de abril de 2026";
 const CHILD_SAFETY_EFFECTIVE_DATE = "27 de abril de 2026";
 const SUPPORT_EMAIL = "burgosdeveloper@gmail.com";
@@ -142,7 +142,7 @@ function renderAccountDeletionHtml() {
   return renderPage({
     title: "Eliminación de cuenta",
     intro:
-      "Los usuarios de STAR TRASLADOS C.A pueden solicitar la eliminación de su cuenta y de los datos asociados.",
+      "Los usuarios de XPRESS TRASLADOS C.A pueden solicitar la eliminación de su cuenta y de los datos asociados.",
     sections: [
       {
         title: "1. Solicitud desde la app",
@@ -191,7 +191,7 @@ function renderChildSafetyStandardsHtml() {
     title: "Estándares de seguridad de los niños",
     effectiveDate: CHILD_SAFETY_EFFECTIVE_DATE,
     intro:
-      "STAR TRASLADOS C.A mantiene una política de tolerancia cero frente a cualquier forma de explotación, abuso sexual infantil o material de abuso sexual infantil (CSAM/CSAE) dentro de la plataforma.",
+      "XPRESS TRASLADOS C.A mantiene una política de tolerancia cero frente a cualquier forma de explotación, abuso sexual infantil o material de abuso sexual infantil (CSAM/CSAE) dentro de la plataforma.",
     sections: [
       {
         title: "1. Conducta prohibida",
@@ -245,7 +245,7 @@ function renderSupportHtml() {
   return renderPage({
     title: "Soporte y Contacto",
     intro:
-      "Si tienes alguna duda, problema o sugerencia con la aplicación STAR TRASLADOS C.A, estamos aquí para ayudarte.",
+      "Si tienes alguna duda, problema o sugerencia con la aplicación XPRESS TRASLADOS C.A, estamos aquí para ayudarte.",
     sections: [
       {
         title: "1. Información de contacto",

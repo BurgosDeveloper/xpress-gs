@@ -24,14 +24,27 @@ export class ApiError extends Error {
 
 async function parseErrorData(res: Response): Promise<{ message: string; data?: ApiErrorLike }> {
   try {
-    const data = (await res.json()) as ApiErrorLike;
-    if (data?.message && typeof data.message === "string") return { message: data.message, data };
-    return { message: res.statusText || "Request failed", data };
+    const text = await res.text();
+    if (text) {
+      try {
+        const data = JSON.parse(text) as ApiErrorLike;
+        if (data?.message && typeof data.message === "string") return { message: data.message, data };
+      } catch {
+        if (text.includes("Application not found") || res.status === 404 || res.status === 502) {
+          return { message: "No se pudo establecer conexión con el servidor. Por favor, reintenta." };
+        }
+      }
+    }
   } catch {
     // ignore
   }
 
-  return { message: res.statusText || "Request failed" };
+  const rawMsg = res.statusText || "";
+  if (rawMsg.includes("Application not found") || res.status === 404 || res.status === 502) {
+    return { message: "No se pudo establecer conexión con el servidor. Por favor, reintenta." };
+  }
+
+  return { message: rawMsg || "No se pudo completar la solicitud. Reintenta." };
 }
 
 export async function apiRequest<T>(params: {
