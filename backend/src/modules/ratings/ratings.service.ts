@@ -18,7 +18,30 @@ export async function createRating(params: {
   });
 
   if (!ride) return { ok: false as const, error: "Ride not found" };
-  if (!ride.matchedDriver) return { ok: false as const, error: "Ride has no matched driver" };
+
+  if (!ride.matchedDriver) {
+    // Si el chofer fue eliminado o desvinculado de la DB por el administrador,
+    // registramos la calificación sintética para desbloquear la pantalla del cliente.
+    try {
+      const direction = params.role === UserRole.USER ? RatingDirection.PASSENGER_TO_DRIVER : RatingDirection.DRIVER_TO_PASSENGER;
+      const existing = await prisma.rating.findFirst({ where: { rideId: ride.id, direction } });
+      if (existing) return { ok: true as const, rating: existing };
+
+      const dummyRating = await prisma.rating.create({
+        data: {
+          rideId: ride.id,
+          direction,
+          fromUserId: params.userId,
+          toUserId: params.userId,
+          stars: params.stars,
+          comment: params.comment ? `[Desvinculado] ${params.comment}` : "[Chofer desvinculado]",
+        },
+      });
+      return { ok: true as const, rating: dummyRating };
+    } catch {
+      return { ok: true as const, rating: null };
+    }
+  }
 
   let direction: RatingDirection;
   let fromUserId = params.userId;
