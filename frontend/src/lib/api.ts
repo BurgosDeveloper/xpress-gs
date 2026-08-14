@@ -55,35 +55,50 @@ export async function apiRequest<T>(params: {
   timeoutMs?: number;
 }): Promise<T> {
   const url = `${getApiBaseUrl()}${params.path.startsWith("/") ? "" : "/"}${params.path}`;
+  const timeoutMs = typeof params.timeoutMs === "number" && params.timeoutMs > 0 ? params.timeoutMs : 20000;
 
-  const timeoutMs = typeof params.timeoutMs === "number" && params.timeoutMs > 0 ? params.timeoutMs : 15000;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let attempt = 0;
+  while (attempt < 2) {
+    attempt++;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: params.method,
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(params.token ? { Authorization: `Bearer ${params.token}` } : null),
-      },
-      body: params.body ? JSON.stringify(params.body) : undefined,
-    });
-  } catch (e) {
-    if (e && typeof e === "object" && (e as any).name === "AbortError") {
-      throw new ApiError("Tiempo de espera agotado. Revisá tu conexión e intentá de nuevo.", 408);
+    try {
+      const res = await fetch(url, {
+        method: params.method,
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(params.token ? { Authorization: `Bearer ${params.token}` } : null),
+        },
+        body: params.body ? JSON.stringify(params.body) : undefined,
+      });
+
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        if ((res.status === 502 || res.status === 503) && attempt < 2) {
+          await new Promise((r) => setTimeout(r, 600));
+          continue;
+        }
+        const parsed = await parseErrorData(res);
+        throw ApiError.from({ message: parsed.message, status: res.status, data: parsed.data });
+      }
+
+      return (await res.json()) as T;
+    } catch (e) {
+      clearTimeout(timeout);
+      if (e instanceof ApiError) throw e;
+      if (attempt < 2) {
+        await new Promise((r) => setTimeout(r, 600));
+        continue;
+      }
+      if (e && typeof e === "object" && (e as any).name === "AbortError") {
+        throw new ApiError("Tiempo de espera agotado. Por favor, reintenta.", 408);
+      }
+      throw new ApiError("No se pudo conectar con el servidor. Por favor, reintenta.", 0);
     }
-    throw new ApiError("No se pudo conectar con el servidor.", 0);
-  } finally {
-    clearTimeout(timeout);
   }
 
-  if (!res.ok) {
-    const parsed = await parseErrorData(res);
-    throw ApiError.from({ message: parsed.message, status: res.status, data: parsed.data });
-  }
-
-  return (await res.json()) as T;
+  throw new ApiError("No se pudo conectar con el servidor. Por favor, reintenta.", 0);
 }
