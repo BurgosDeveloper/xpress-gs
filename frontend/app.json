@@ -68,7 +68,8 @@
         {
           "photosPermission": "Xpress Traslados necesita acceso a tus fotos para permitir cargar fotos de perfil y documentos de vehículos."
         }
-      ]
+      ],
+      "./plugins/withCocoaPodsGitSource"
     ],
     "extra": {
       "eas": {
