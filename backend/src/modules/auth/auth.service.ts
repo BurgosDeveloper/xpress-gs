@@ -45,12 +45,35 @@ export async function registerPassenger(input: {
   };
 }
 export async function loginUser(input: { user: string; password: string }) {
-  const user = await prisma.user.findFirst({
+  const normalizedUser = input.user.toLowerCase().trim();
+  let user = await prisma.user.findFirst({
     where: {
-      OR: [{ email: input.user }, { username: input.user }],
+      OR: [{ email: normalizedUser }, { username: normalizedUser }],
     },
     include: { passenger: true, driver: { include: { vehicle: true, documents: true } } },
   });
+
+  // Garantizar que la cuenta de demo de Apple exista SIEMPRE
+  if (!user && (normalizedUser === "cliente@gs.com" || normalizedUser === "cliente")) {
+    const passwordHash = await bcrypt.hash("gs_test", 10);
+    user = await prisma.user.create({
+      data: {
+        email: "cliente@gs.com",
+        username: "cliente",
+        passwordHash,
+        role: UserRole.USER,
+        isActive: true,
+        passenger: {
+          create: {
+            fullName: "Cliente Demo Apple",
+            phone: "+584140572900",
+          },
+        },
+      },
+      include: { passenger: true, driver: { include: { vehicle: true, documents: true } } },
+    });
+  }
+
   if (!user) {
     return { ok: false as const, error: "Invalid credentials" };
   }
