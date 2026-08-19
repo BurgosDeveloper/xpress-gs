@@ -42,24 +42,17 @@ async function getNearbyDriverUserIdsForOffer(offer: {
   serviceTypeWanted: ServiceType;
 }) {
   const pickup = { lat: Number(offer.pickupLat), lng: Number(offer.pickupLng) };
-  const radiusM = Math.max(250, Math.min(50_000, Number(offer.searchRadiusM ?? 5000)));
-  const radiusKm = radiusM / 1000;
-  const box = boundingBoxKm(pickup, radiusKm);
-  const freshSince = driverLocationFreshSince();
+
+  const isMotoCategory = offer.serviceTypeWanted === "MOTO" || offer.serviceTypeWanted === "MOTO_CARGA";
+  const matchingTypes: ServiceType[] = isMotoCategory
+    ? [ServiceType.MOTO, ServiceType.MOTO_CARGA]
+    : [ServiceType.CARRO, ServiceType.CARRO_CARGA];
 
   const drivers = await prisma.driverProfile.findMany({
     where: {
       status: DriverStatus.APPROVED,
-      isAvailable: true,
       user: { is: { isActive: true } },
-      serviceType: offer.serviceTypeWanted,
-      location: {
-        is: {
-          updatedAt: { gte: freshSince },
-          lat: { gte: box.minLat, lte: box.maxLat },
-          lng: { gte: box.minLng, lte: box.maxLng },
-        },
-      },
+      serviceType: { in: matchingTypes },
       matchedRides: {
         none: {
           status: { in: [RideStatus.ASSIGNED, RideStatus.ACCEPTED, RideStatus.MATCHED, RideStatus.IN_PROGRESS] },
@@ -76,12 +69,11 @@ async function getNearbyDriverUserIdsForOffer(offer: {
   return drivers
     .map((d) => {
       const loc = d.location ? { lat: Number(d.location.lat), lng: Number(d.location.lng) } : null;
-      const dist = loc ? haversineDistanceMeters(pickup, loc) : Number.NaN;
+      const dist = loc && Number.isFinite(loc.lat) && Number.isFinite(loc.lng) ? haversineDistanceMeters(pickup, loc) : 0;
       return { userId: d.userId, distanceMeters: Math.round(dist) };
     })
-    .filter((x) => Number.isFinite(x.distanceMeters) && x.distanceMeters <= radiusM)
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
-    .slice(0, 50)
+    .slice(0, 100)
     .map((x) => x.userId);
 }
 
@@ -397,10 +389,15 @@ export async function listNearbyOffers(params: {
   const radiusKm = params.radiusM / 1000;
   const box = boundingBoxKm({ lat: params.center.lat, lng: params.center.lng }, radiusKm);
 
+  const isMotoCategory = params.serviceType === "MOTO" || params.serviceType === "MOTO_CARGA";
+  const matchingTypes: ServiceType[] | undefined = params.serviceType
+    ? (isMotoCategory ? [ServiceType.MOTO, ServiceType.MOTO_CARGA] : [ServiceType.CARRO, ServiceType.CARRO_CARGA])
+    : undefined;
+
   const offers = await prisma.rideOffer.findMany({
     where: {
       status: OfferStatus.OPEN,
-      ...(params.serviceType ? { serviceTypeWanted: params.serviceType as ServiceType } : null),
+      ...(matchingTypes ? { serviceTypeWanted: { in: matchingTypes } } : null),
       pickupLat: { gte: box.minLat, lte: box.maxLat },
       pickupLng: { gte: box.minLng, lte: box.maxLng },
     },

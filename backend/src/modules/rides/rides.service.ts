@@ -442,13 +442,17 @@ export async function createRide(params: {
     try {
       const pickup = { lat: Number(ride.pickupLat), lng: Number(ride.pickupLng) };
 
-      // Buscar todos los choferes aprobados y disponibles que concuerden con el tipo de vehículo solicitado
+      const isMotoCategory = ride.serviceTypeWanted === "MOTO" || ride.serviceTypeWanted === "MOTO_CARGA";
+      const matchingTypes: ServiceType[] = isMotoCategory
+        ? [ServiceType.MOTO, ServiceType.MOTO_CARGA]
+        : [ServiceType.CARRO, ServiceType.CARRO_CARGA];
+
+      // Buscar todos los choferes aprobados que concuerden con el tipo de vehículo solicitado
       const drivers = await prisma.driverProfile.findMany({
         where: {
           status: DriverStatus.APPROVED,
-          isAvailable: true,
           user: { is: { isActive: true } },
-          serviceType: ride.serviceTypeWanted,
+          serviceType: { in: matchingTypes },
           matchedRides: {
             none: {
               status: { in: [RideStatus.ASSIGNED, RideStatus.ACCEPTED, RideStatus.MATCHED, RideStatus.IN_PROGRESS] },
@@ -645,17 +649,25 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
 
   if (!driver) return { ok: false as const, status: 404 as const, error: "Driver not found" };
   if (!driver.user?.isActive) return { ok: false as const, status: 403 as const, error: "Driver disabled" };
-  if (!driver.location) return { ok: false as const, status: 400 as const, error: "Driver location missing" };
 
-  const center = { lat: Number(driver.location.lat), lng: Number(driver.location.lng) };
-  const radiusKm = params.radiusM / 1000;
+  const center = driver.location && Number.isFinite(Number(driver.location.lat)) && Number.isFinite(Number(driver.location.lng))
+    ? { lat: Number(driver.location.lat), lng: Number(driver.location.lng) }
+    : { lat: 7.7669, lng: -72.225 }; // Default San Cristóbal center fallback
+
+  const effectiveRadiusM = Math.max(10_000, Number(params.radiusM || 50_000));
+  const radiusKm = effectiveRadiusM / 1000;
   const box = boundingBoxKm(center, radiusKm);
+
+  const isMotoCategory = driver.serviceType === "MOTO" || driver.serviceType === "MOTO_CARGA";
+  const matchingTypes: ServiceType[] = isMotoCategory
+    ? [ServiceType.MOTO, ServiceType.MOTO_CARGA]
+    : [ServiceType.CARRO, ServiceType.CARRO_CARGA];
 
   const raw = await prisma.rideRequest.findMany({
     where: {
       status: "OPEN",
       matchedDriverId: null,
-      serviceTypeWanted: driver.serviceType,
+      serviceTypeWanted: { in: matchingTypes },
       pickupLat: { gte: box.minLat, lte: box.maxLat },
       pickupLng: { gte: box.minLng, lte: box.maxLng },
       passenger: { is: { user: { is: { isActive: true } } } },
