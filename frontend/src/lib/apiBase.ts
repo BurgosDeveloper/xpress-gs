@@ -20,15 +20,22 @@ function guessLanApiBaseUrl() {
 }
 
 export function getApiBaseUrl() {
-  const fromEnv = process.env.EXPO_PUBLIC_API_BASE_URL;
-  if (fromEnv && fromEnv.trim()) return fromEnv.trim();
-
-  // En producción (APKs e IPAs independientes), usar SIEMPRE el servidor seguro HTTPS en Railway
   if (!__DEV__) {
-    return DEFAULT_PROD_API_BASE_URL;
+    let url = (process.env.EXPO_PUBLIC_API_BASE_URL && process.env.EXPO_PUBLIC_API_BASE_URL.trim()) || DEFAULT_PROD_API_BASE_URL;
+    if (!url.startsWith("http")) url = DEFAULT_PROD_API_BASE_URL;
+    if (!url.endsWith("/api")) {
+      url = url.replace(/\/+$/, "") + "/api";
+    }
+    return url;
   }
 
-  // Únicamente en desarrollo local (__DEV__ con Expo Go), intentar adivinar la IP local
+  const fromEnv = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (fromEnv && fromEnv.trim()) {
+    let url = fromEnv.trim();
+    if (!url.endsWith("/api")) url = url.replace(/\/+$/, "") + "/api";
+    return url;
+  }
+
   const guessed = guessLanApiBaseUrl();
   if (guessed) return guessed;
 

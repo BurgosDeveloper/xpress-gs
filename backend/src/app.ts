@@ -70,6 +70,12 @@ export function createApp() {
     }
   });
   app.use("/api", apiRouter);
+  app.use(apiRouter); // Fallback: permite /auth/login y /api/auth/login indistintamente
+
+  // Catch-all 404 handler en JSON limpio (evita páginas HTML de error)
+  app.use((_req, res) => {
+    res.status(404).json({ message: "No se pudo procesar la solicitud. Por favor, reintente." });
+  });
 
   app.use(errorMiddleware);
   return app;
