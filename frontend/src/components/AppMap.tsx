@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Pressable } from "react-native";
 import MapboxGL from "@rnmapbox/maps";
 
 import { colors } from "../theme/colors";
+import { MapPointMarker } from "./map/MapPointMarker";
 
 export type LatLng = { latitude: number; longitude: number };
 export type Region = { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
@@ -22,6 +23,7 @@ export type AppMapMarker = {
   draggable?: boolean;
   onDragEnd?: (coordinate: LatLng) => void;
   children?: React.ReactElement;
+  anchor?: { x: number; y: number };
 };
 
 export type AppMapPolyline = {
@@ -196,15 +198,52 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
         const pinColor = (m.pinColor && String(m.pinColor)) || colors.neon;
         const labelText = m.title || (m.id === "pickup" || m.id === "me" ? "A" : m.id === "dropoff" ? "B" : null);
 
-        const child = m.children ?? (
-          labelText ? (
-            <View style={styles.letterPin}>
-              <Text style={styles.letterPinText}>{labelText}</Text>
-            </View>
-          ) : (
-            <View style={[styles.defaultPin, { borderColor: pinColor }]} />
-          )
-        );
+        let child = m.children;
+        if (!child) {
+          if (labelText === "A" || m.id === "pickup" || m.id === "me") {
+            child = (
+              <MapPointMarker
+                type="A"
+                label="A"
+                tag="ORIGEN"
+                isDraggable={Boolean(m.draggable)}
+                pinColor="#0000FF"
+              />
+            );
+          } else if (labelText === "B" || m.id === "dropoff") {
+            child = (
+              <MapPointMarker
+                type="B"
+                label="B"
+                tag="DESTINO"
+                isDraggable={Boolean(m.draggable)}
+                pinColor="#FF3344"
+              />
+            );
+          } else if (m.id.startsWith("driver-")) {
+            child = (
+              <MapPointMarker
+                type="DRIVER"
+                pinColor={m.pinColor || "#0000FF"}
+              />
+            );
+          } else if (labelText) {
+            child = (
+              <MapPointMarker
+                type="CUSTOM"
+                label={labelText}
+                tag=""
+                isDraggable={Boolean(m.draggable)}
+                pinColor={pinColor}
+              />
+            );
+          } else {
+            child = <View style={[styles.defaultPin, { borderColor: pinColor }]} />;
+          }
+        }
+
+        const isNeedlePin = !m.children && (labelText === "A" || labelText === "B" || m.id === "pickup" || m.id === "dropoff");
+        const anchor = m.anchor ?? (isNeedlePin ? { x: 0.5, y: 0.88 } : { x: 0.5, y: 0.5 });
 
         return {
           id: String(m.id),
@@ -213,6 +252,7 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
           draggable: m.draggable,
           onDragEnd: m.onDragEnd,
           title: m.title,
+          anchor,
           child,
         };
       });
@@ -300,6 +340,7 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
               coordinate={m.coordinate}
               title={m.title}
               draggable={true}
+              anchor={m.anchor}
               onDragEnd={(e: any) => {
                 if (m.onDragEnd && e?.geometry?.coordinates) {
                   const coords = e.geometry.coordinates;
@@ -325,6 +366,7 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
             key={m.id}
             id={m.id}
             coordinate={m.coordinate}
+            anchor={m.anchor}
             allowOverlap={true}
           >
             <Pressable

@@ -621,7 +621,22 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
             : null;
 
           const markers: AppMapMarker[] = [];
-          markers.push({ id: "pickup", title: "A", coordinate: toLatLng(center) });
+          markers.push({
+            id: "pickup",
+            title: "A",
+            coordinate: toLatLng(center),
+            draggable: true,
+            onDragEnd: (c: any) => {
+              setCenter({ lat: c.latitude, lng: c.longitude });
+              setPickupAddress(null);
+              setRoutePreview(null);
+              setRoutePreviewKey(null);
+              setEstimate(null);
+              setEstimateKey(null);
+              setCustomFare(null);
+              setError(null);
+            },
+          });
 
           const polygons = zones
             .filter((z) => z && z.id && z.geojson)
