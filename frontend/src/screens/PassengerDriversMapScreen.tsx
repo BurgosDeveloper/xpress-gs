@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import { AppMap, type AppMapMarker, type AppMapPolyline, type AppMapRef, type LatLng, type Region } from "../components/AppMap";
+import { MapPlaceSearchBar } from "../components/map/MapPlaceSearchBar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSocket } from "../realtime/SocketProvider";
 import { Card } from "../components/Card";
@@ -712,6 +713,12 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
                 setEstimate(null);
                 setEstimateKey(null);
                 setError(null);
+                Location.reverseGeocodeAsync({ latitude: c.latitude, longitude: c.longitude })
+                  .then((res) => {
+                    const formatted = formatReverseGeocoded(res?.[0]);
+                    if (formatted) setDropoffAddress(formatted);
+                  })
+                  .catch(() => {});
               }}
               polyline={polyline}
               markers={markers}
@@ -734,6 +741,46 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
           <Pressable style={styles.fabBtn} onPress={requestRecenter}>
             <Ionicons name="locate" size={22} color={colors.neon} />
           </Pressable>
+        </View>
+
+        {/* Floating Search Bar (Punto B) */}
+        <View style={[styles.floatingSearchBarWrap, { top: Math.max(insets.top, 16) + 60 }]}>
+          <MapPlaceSearchBar
+            currentCenter={center}
+            destinationAddress={dropoffAddress}
+            onSelectDestination={(place) => {
+              setDropoff({ lat: place.lat, lng: place.lng });
+              setDropoffAddress(place.fullAddress || place.name);
+              setRoutePreview(null);
+              setRoutePreviewKey(null);
+              setEstimate(null);
+              setEstimateKey(null);
+              setCustomFare(null);
+              setError(null);
+              userInteractedRef.current = true;
+
+              mapRef.current?.fitToCoordinates(
+                [
+                  { latitude: center.lat, longitude: center.lng },
+                  { latitude: place.lat, longitude: place.lng },
+                ],
+                {
+                  edgePadding: { top: 140, right: 40, bottom: 280, left: 40 },
+                  animated: true,
+                }
+              );
+            }}
+            onClearDestination={() => {
+              setDropoff(null);
+              setDropoffAddress(null);
+              setRoutePreview(null);
+              setRoutePreviewKey(null);
+              setEstimate(null);
+              setEstimateKey(null);
+              setCustomFare(null);
+              setError(null);
+            }}
+          />
         </View>
 
         {loadingLocation || (loadingDrivers && !driversLoadedRef.current) ? (
@@ -942,6 +989,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     zIndex: 9,
+  },
+  floatingSearchBarWrap: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    zIndex: 90,
   },
   fabBtn: {
     width: 46,
