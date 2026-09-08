@@ -207,7 +207,7 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
                 label="A"
                 tag="ORIGEN"
                 isDraggable={Boolean(m.draggable)}
-                pinColor="#0000FF"
+                pinColor={colors.neon}
               />
             );
           } else if (labelText === "B" || m.id === "dropoff") {
@@ -217,14 +217,14 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
                 label="B"
                 tag="DESTINO"
                 isDraggable={Boolean(m.draggable)}
-                pinColor="#FF3344"
+                pinColor="#FFFFFF"
               />
             );
           } else if (m.id.startsWith("driver-")) {
             child = (
               <MapPointMarker
                 type="DRIVER"
-                pinColor={m.pinColor || "#0000FF"}
+                pinColor={m.pinColor || colors.neon}
               />
             );
           } else if (labelText) {
@@ -331,55 +331,26 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
         </MapboxGL.ShapeSource>
       ) : null}
 
-      {markerItems.map((m) => {
-        if (m.draggable) {
-          return (
-            <MapboxGL.PointAnnotation
-              key={m.id}
-              id={m.id}
-              coordinate={m.coordinate}
-              title={m.title}
-              draggable={true}
-              anchor={m.anchor}
-              onDragEnd={(e: any) => {
-                if (m.onDragEnd && e?.geometry?.coordinates) {
-                  const coords = e.geometry.coordinates;
-                  const lng = Array.isArray(coords) ? coords[0] : null;
-                  const lat = Array.isArray(coords) ? coords[1] : null;
-                  if (isFiniteNumber(lat) && isFiniteNumber(lng)) {
-                    m.onDragEnd({ latitude: lat, longitude: lng });
-                  }
-                }
-              }}
-              onSelected={() => {
-                lastMarkerTapAtRef.current = Date.now();
-                m.onPress?.();
-              }}
-            >
-              {m.child}
-            </MapboxGL.PointAnnotation>
-          );
-        }
-
-        return (
-          <MapboxGL.MarkerView
-            key={m.id}
-            id={m.id}
-            coordinate={m.coordinate}
-            anchor={m.anchor}
-            allowOverlap={true}
+      {markerItems.map((m) => (
+        <MapboxGL.MarkerView
+          key={m.id}
+          id={m.id}
+          coordinate={m.coordinate}
+          anchor={m.anchor}
+          allowOverlap={true}
+        >
+          <Pressable
+            collapsable={false}
+            disabled={!m.onPress}
+            onPress={() => {
+              lastMarkerTapAtRef.current = Date.now();
+              m.onPress?.();
+            }}
           >
-            <Pressable
-              onPress={() => {
-                lastMarkerTapAtRef.current = Date.now();
-                m.onPress?.();
-              }}
-            >
-              {m.child}
-            </Pressable>
-          </MapboxGL.MarkerView>
-        );
-      })}
+            {m.child}
+          </Pressable>
+        </MapboxGL.MarkerView>
+      ))}
       </MapboxGL.MapView>
     </View>
   );

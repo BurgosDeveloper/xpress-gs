@@ -273,7 +273,7 @@ export function DriverLiveNavigationModal({
           type="DRIVER"
           bearing={heading}
           vehicleType={ride?.serviceTypeWanted || "CARRO"}
-          pinColor="#0000FF"
+          pinColor={colors.neon}
         />
       ),
     });
@@ -289,7 +289,7 @@ export function DriverLiveNavigationModal({
           type={targetPointType}
           label={targetPointType}
           tag={targetTag}
-          pinColor={targetPointType === "A" ? "#0000FF" : "#FF3344"}
+          pinColor={targetPointType === "A" ? colors.neon : "#FFFFFF"}
         />
       ),
     });
@@ -301,7 +301,7 @@ export function DriverLiveNavigationModal({
       ? {
           id: "driver-nav-route",
           coordinates: routePath,
-          strokeColor: "#0000FF",
+          strokeColor: colors.neon,
           strokeWidth: 5,
         }
       : null;
@@ -337,8 +337,8 @@ export function DriverLiveNavigationModal({
         <View style={[styles.topHud, { paddingTop: Math.max(insets.top, 16) }]}>
           <View style={styles.topHudCard}>
             <View style={styles.topHudRow}>
-              <View style={[styles.phaseIndicator, { backgroundColor: targetPointType === "A" ? "#0000FF" : "#FF3344" }]}>
-                <Ionicons name={isTripInProgress ? "flag" : "navigate"} size={20} color="#FFFFFF" />
+              <View style={[styles.phaseIndicator, { backgroundColor: targetPointType === "A" ? colors.neon : "#FFFFFF" }]}>
+                <Ionicons name={isTripInProgress ? "flag" : "navigate"} size={20} color="#000000" />
               </View>
               <View style={styles.targetAddressWrap}>
                 <Text style={styles.targetPhaseTitle}>
@@ -360,13 +360,13 @@ export function DriverLiveNavigationModal({
             {/* Métricas de Distancia y Tiempo */}
             <View style={styles.metricsRow}>
               <View style={styles.metricItem}>
-                <Ionicons name="speedometer-outline" size={16} color="#66B2FF" />
+                <Ionicons name="speedometer-outline" size={16} color={colors.neon} />
                 <Text style={styles.metricLabel}>DISTANCIA:</Text>
                 <Text style={styles.metricValue}>{formatMetersToDisplay(distanceMeters)}</Text>
               </View>
               <View style={styles.metricDivider} />
               <View style={styles.metricItem}>
-                <Ionicons name="time-outline" size={16} color="#66B2FF" />
+                <Ionicons name="time-outline" size={16} color={colors.neon} />
                 <Text style={styles.metricLabel}>TIEMPO APROX:</Text>
                 <Text style={styles.metricValue}>
                   {loadingRoute ? "..." : formatSecondsToDisplay(durationSeconds)}
@@ -383,7 +383,7 @@ export function DriverLiveNavigationModal({
             onPress={handleCenterOnMe}
             accessibilityLabel="Centrar en vehículo"
           >
-            <Ionicons name="locate" size={22} color={followDriver ? "#0000FF" : "#FFFFFF"} />
+            <Ionicons name="locate" size={22} color={followDriver ? colors.neon : "#FFFFFF"} />
           </Pressable>
 
           <Pressable
@@ -419,7 +419,7 @@ export function DriverLiveNavigationModal({
               onPress={() => onNavigateChat(String(ride.id))}
               accessibilityLabel="Chat con cliente"
             >
-              <Ionicons name="chatbubble-ellipses" size={20} color="#0000FF" />
+              <Ionicons name="chatbubble-ellipses" size={20} color={colors.neon} />
             </Pressable>
           ) : null}
         </View>
@@ -431,7 +431,7 @@ export function DriverLiveNavigationModal({
               <Image source={{ uri: passengerPhoto }} style={styles.avatar} resizeMode="cover" />
             ) : (
               <View style={styles.avatarFallback}>
-                <Ionicons name="person" size={20} color="#0000FF" />
+                <Ionicons name="person" size={20} color={colors.neon} />
               </View>
             )}
             <View style={styles.passengerInfo}>
@@ -456,11 +456,11 @@ export function DriverLiveNavigationModal({
                 disabled={rideActionLoading}
               >
                 {rideActionLoading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color="#000000" />
                 ) : (
                   <>
-                    <Ionicons name="location" size={22} color="#FFFFFF" />
-                    <Text style={styles.actionBtnText}>¡Llegué al Punto de Recogida!</Text>
+                    <Ionicons name="location" size={22} color="#000000" />
+                    <Text style={[styles.actionBtnText, { color: "#000000" }]}>¡Llegué al Punto de Recogida!</Text>
                   </>
                 )}
               </Pressable>
@@ -636,8 +636,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   sideBtnActive: {
-    borderColor: "#0000FF",
-    backgroundColor: "rgba(0, 0, 255, 0.15)",
+    borderColor: colors.neon,
+    backgroundColor: colors.neonGlow,
   },
   phoneBtn: {
     backgroundColor: "#007AFF",
@@ -677,15 +677,15 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: "#0000FF",
+    borderColor: colors.neon,
   },
   avatarFallback: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "rgba(0, 0, 255, 0.15)",
+    backgroundColor: colors.neonGlow,
     borderWidth: 1.5,
-    borderColor: "#0000FF",
+    borderColor: colors.neon,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -704,15 +704,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   priceBadge: {
-    backgroundColor: "rgba(0, 0, 255, 0.2)",
+    backgroundColor: colors.neonGlow,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#0000FF",
+    borderColor: colors.neon,
   },
   priceText: {
-    color: "#FFFFFF",
+    color: colors.neon,
     fontSize: 16,
     fontWeight: "900",
   },
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   arrivedBtn: {
-    backgroundColor: "#0000FF",
+    backgroundColor: colors.neon,
   },
   startBtn: {
     backgroundColor: "#008844",

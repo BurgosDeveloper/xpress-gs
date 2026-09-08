@@ -81,7 +81,7 @@ export function MapPlaceSearchBar({
   }
 
   const isPopularList = isFocused && query.trim().length === 0;
-  const displayedItems = isPopularList ? POPULAR_SAN_CRISTOBAL_PLACES.slice(0, 5) : results;
+  const displayedItems = isPopularList ? POPULAR_SAN_CRISTOBAL_PLACES.slice(0, 10) : results;
   const showDropdown = isFocused && (displayedItems.length > 0 || loading);
 
   return (
@@ -89,7 +89,7 @@ export function MapPlaceSearchBar({
       {/* Barra de Búsqueda Principal */}
       <View style={[styles.searchBar, isFocused && styles.searchBarFocused]}>
         <View style={styles.iconWrap}>
-          <Ionicons name="navigate-circle" size={24} color="#0000FF" />
+          <Ionicons name="navigate-circle" size={24} color={colors.neon} />
         </View>
 
         <TextInput
@@ -99,7 +99,7 @@ export function MapPlaceSearchBar({
               ? `Destino: ${destinationAddress}`
               : "¿A dónde vas? (Buscar Punto B)"
           }
-          placeholderTextColor={destinationAddress ? "#66B2FF" : "#8E8E93"}
+          placeholderTextColor={destinationAddress ? colors.neon : "#8E8E93"}
           value={query}
           onChangeText={setQuery}
           onFocus={() => setIsFocused(true)}
@@ -109,7 +109,7 @@ export function MapPlaceSearchBar({
         />
 
         {loading ? (
-          <ActivityIndicator size="small" color="#0000FF" style={styles.actionBtn} />
+          <ActivityIndicator size="small" color={colors.neon} style={styles.actionBtn} />
         ) : query.length > 0 || destinationAddress ? (
           <Pressable
             onPress={handleClear}
@@ -131,14 +131,14 @@ export function MapPlaceSearchBar({
         <View style={styles.dropdown}>
           {isPopularList ? (
             <View style={styles.dropdownHeader}>
-              <Ionicons name="star" size={12} color="#0000FF" />
-              <Text style={styles.dropdownHeaderText}>LUGARES FRECUENTES EN SAN CRISTÓBAL</Text>
+              <Ionicons name="star" size={12} color={colors.neon} />
+              <Text style={styles.dropdownHeaderText}>LUGARES FRECUENTES EN TÁCHIRA</Text>
             </View>
           ) : null}
 
           {loading && results.length === 0 ? (
             <View style={styles.loadingRow}>
-              <ActivityIndicator size="small" color="#0000FF" />
+              <ActivityIndicator size="small" color={colors.neon} />
               <Text style={styles.loadingText}>Buscando lugares recomendados...</Text>
             </View>
           ) : displayedItems.length > 0 ? (
@@ -153,9 +153,9 @@ export function MapPlaceSearchBar({
                 >
                   <View style={styles.resultIconWrap}>
                     <Ionicons
-                      name={isPopularList ? "star-outline" : "location-sharp"}
-                      size={18}
-                      color={isPopularList ? "#0000FF" : "#FF3344"}
+                      name={isPopularList ? "star" : "location-sharp"}
+                      size={16}
+                      color={colors.neon}
                     />
                   </View>
                   <View style={styles.resultTextWrap}>
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   searchBarFocused: {
-    borderColor: "#0000FF",
+    borderColor: colors.neon,
     backgroundColor: "rgba(8, 8, 14, 0.98)",
   },
   iconWrap: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     backgroundColor: "rgba(10, 10, 16, 0.96)",
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 255, 0.35)",
+    borderColor: colors.neonGlow,
     borderRadius: 16,
     maxHeight: 250,
     shadowColor: "#000000",
@@ -272,13 +272,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   resultItemPressed: {
-    backgroundColor: "rgba(0, 0, 255, 0.2)",
+    backgroundColor: colors.neonGlow,
   },
   resultIconWrap: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "rgba(0, 0, 255, 0.15)",
+    backgroundColor: "rgba(212, 175, 55, 0.15)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     borderTopColor: "rgba(255, 255, 255, 0.08)",
   },
   closeDropdownText: {
-    color: "#66B2FF",
+    color: colors.neon,
     fontSize: 12,
     fontWeight: "700",
   },

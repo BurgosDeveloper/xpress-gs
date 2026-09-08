@@ -174,7 +174,7 @@ export function DriverHomeView({
           style={styles.liveNavBtn}
           onPress={() => setLiveNavVisible(true)}
         >
-          <Ionicons name="navigate-circle" size={20} color="#FFFFFF" />
+          <Ionicons name="navigate-circle" size={20} color="#000000" />
           <Text style={styles.liveNavBtnText}>
             {status === "IN_PROGRESS" ? "Navegar hacia Destino" : "Iniciar Búsqueda / Navegar"}
           </Text>
@@ -1094,20 +1094,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0000FF",
+    backgroundColor: colors.neon,
     paddingVertical: 13,
     borderRadius: 14,
     gap: 8,
     marginTop: 6,
     marginBottom: 4,
-    shadowColor: "#0000FF",
+    shadowColor: colors.neonGlow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,
     shadowRadius: 8,
     elevation: 8,
   },
   liveNavBtnText: {
-    color: "#FFFFFF",
+    color: "#000000",
     fontSize: 14,
     fontWeight: "900",
     letterSpacing: 0.4,

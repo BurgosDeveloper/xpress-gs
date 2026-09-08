@@ -34,7 +34,7 @@ export function MapPointMarker({
     const iconName = isMoto ? "bicycle" : "car";
 
     return (
-      <View style={styles.driverContainer}>
+      <View style={styles.driverContainer} collapsable={false}>
         {/* Halo de pulso radar */}
         <View style={styles.driverPulseHalo} />
         {/* Cuerpo del vehículo con rotación según bearing */}
@@ -43,7 +43,7 @@ export function MapPointMarker({
             styles.driverBadge,
             {
               transform: [{ rotate: `${bearing}deg` }],
-              borderColor: pinColor || "#0000FF",
+              borderColor: pinColor || colors.neon,
             },
           ]}
         >
@@ -54,17 +54,20 @@ export function MapPointMarker({
   }
 
   const isPointA = type === "A";
-  const mainColor = pinColor || (isPointA ? "#0000FF" : "#FF3344");
-  const glowColor = isPointA ? "rgba(0, 0, 255, 0.45)" : "rgba(255, 51, 68, 0.45)";
+  const mainColor = pinColor || (isPointA ? colors.neon : "#FFFFFF");
+  const glowColor = isPointA ? colors.neonGlow : "rgba(255, 255, 255, 0.45)";
   const letter = isPointA ? "A" : "B";
   const displayTag = tag || (isPointA ? "ORIGEN" : "DESTINO");
+  const circleBg = isPointA ? colors.neon : "#FFFFFF";
+  const circleBorder = isPointA ? "#FFFFFF" : colors.neon;
+  const letterColor = "#000000";
 
   return (
-    <View style={styles.pinWrapper}>
+    <View style={styles.pinWrapper} collapsable={false}>
       {/* Etiqueta superior opcional */}
       {displayTag ? (
         <View style={[styles.tagBadge, { backgroundColor: "rgba(10, 10, 15, 0.92)", borderColor: mainColor }]}>
-          <Text style={[styles.tagText, { color: isPointA ? "#66B2FF" : "#FFAAA6" }]}>{displayTag}</Text>
+          <Text style={[styles.tagText, { color: isPointA ? colors.neon : "#FFFFFF" }]}>{displayTag}</Text>
         </View>
       ) : null}
 
@@ -73,13 +76,13 @@ export function MapPointMarker({
         style={[
           styles.circlePin,
           {
-            backgroundColor: mainColor,
-            borderColor: "#FFFFFF",
+            backgroundColor: circleBg,
+            borderColor: circleBorder,
             shadowColor: mainColor,
           },
         ]}
       >
-        <Text style={styles.letterText}>{label || letter}</Text>
+        <Text style={[styles.letterText, { color: letterColor }]}>{label || letter}</Text>
 
         {isDraggable ? (
           <View style={styles.dragIndicator}>
@@ -89,7 +92,7 @@ export function MapPointMarker({
       </View>
 
       {/* Aguja / Punta inferior de precisión hacia las coordenadas */}
-      <View style={[styles.needle, { borderTopColor: mainColor }]} />
+      <View style={[styles.needle, { borderTopColor: circleBg }]} />
 
       {/* Punto de anclaje de sombra en el suelo */}
       <View style={[styles.shadowDot, { backgroundColor: glowColor }]} />
@@ -181,19 +184,19 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "rgba(0, 0, 255, 0.25)",
+    backgroundColor: colors.neonGlow,
     borderWidth: 1,
-    borderColor: "rgba(0, 0, 255, 0.5)",
+    borderColor: colors.neon,
   },
   driverBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#050515",
+    backgroundColor: "#0A0A08",
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0000FF",
+    shadowColor: colors.neon,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.9,
     shadowRadius: 6,

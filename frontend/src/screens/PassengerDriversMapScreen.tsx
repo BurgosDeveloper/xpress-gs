@@ -626,17 +626,7 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
             id: "pickup",
             title: "A",
             coordinate: toLatLng(center),
-            draggable: true,
-            onDragEnd: (c: any) => {
-              setCenter({ lat: c.latitude, lng: c.longitude });
-              setPickupAddress(null);
-              setRoutePreview(null);
-              setRoutePreviewKey(null);
-              setEstimate(null);
-              setEstimateKey(null);
-              setCustomFare(null);
-              setError(null);
-            },
+            pinColor: colors.neon,
           });
 
           const polygons = zones
@@ -655,17 +645,7 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
               id: "dropoff",
               title: "B",
               coordinate: toLatLng(dropoff),
-              draggable: true,
-              onDragEnd: (c: any) => {
-                setDropoff({ lat: c.latitude, lng: c.longitude });
-                setDropoffAddress(null);
-                setRoutePreview(null);
-                setRoutePreviewKey(null);
-                setEstimate(null);
-                setEstimateKey(null);
-                setCustomFare(null);
-                setError(null);
-              },
+              pinColor: colors.text,
             });
           }
 
@@ -677,7 +657,7 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
             markers.push({
               id: `driver-${String(d.driverId)}`,
               coordinate: toLatLng({ lat, lng }),
-              pinColor: colors.danger,
+              pinColor: colors.neon,
               onPress: () => setSelected(d),
             });
           }
