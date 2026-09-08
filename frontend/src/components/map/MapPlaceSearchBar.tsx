@@ -11,7 +11,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
-import { GeocodingPlace, searchPlaces } from "../../services/geocoding.service";
+import {
+  GeocodingPlace,
+  POPULAR_SAN_CRISTOBAL_PLACES,
+  searchPlaces,
+} from "../../services/geocoding.service";
 
 export interface MapPlaceSearchBarProps {
   currentCenter?: { lat: number; lng: number };
@@ -53,7 +57,7 @@ export function MapPlaceSearchBar({
       } finally {
         setLoading(false);
       }
-    }, 350);
+    }, 280);
 
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -76,7 +80,9 @@ export function MapPlaceSearchBar({
     }
   }
 
-  const showDropdown = isFocused && (results.length > 0 || loading || query.trim().length >= 2);
+  const isPopularList = isFocused && query.trim().length === 0;
+  const displayedItems = isPopularList ? POPULAR_SAN_CRISTOBAL_PLACES.slice(0, 5) : results;
+  const showDropdown = isFocused && (displayedItems.length > 0 || loading);
 
   return (
     <View style={[styles.wrapper, style]}>
@@ -120,17 +126,24 @@ export function MapPlaceSearchBar({
         )}
       </View>
 
-      {/* Menú Flotante de Resultados Autocompletados */}
+      {/* Menú Flotante de Resultados / Sugerencias */}
       {showDropdown ? (
         <View style={styles.dropdown}>
+          {isPopularList ? (
+            <View style={styles.dropdownHeader}>
+              <Ionicons name="star" size={12} color="#0000FF" />
+              <Text style={styles.dropdownHeaderText}>LUGARES FRECUENTES EN SAN CRISTÓBAL</Text>
+            </View>
+          ) : null}
+
           {loading && results.length === 0 ? (
             <View style={styles.loadingRow}>
               <ActivityIndicator size="small" color="#0000FF" />
-              <Text style={styles.loadingText}>Buscando lugares cercanos...</Text>
+              <Text style={styles.loadingText}>Buscando lugares recomendados...</Text>
             </View>
-          ) : results.length > 0 ? (
+          ) : displayedItems.length > 0 ? (
             <FlatList
-              data={results}
+              data={displayedItems}
               keyExtractor={(item) => item.id}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
@@ -139,7 +152,11 @@ export function MapPlaceSearchBar({
                   onPress={() => handleSelect(item)}
                 >
                   <View style={styles.resultIconWrap}>
-                    <Ionicons name="location-sharp" size={18} color="#FF3344" />
+                    <Ionicons
+                      name={isPopularList ? "star-outline" : "location-sharp"}
+                      size={18}
+                      color={isPopularList ? "#0000FF" : "#FF3344"}
+                    />
                   </View>
                   <View style={styles.resultTextWrap}>
                     <Text style={styles.resultTitle} numberOfLines={1}>
@@ -224,13 +241,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(0, 0, 255, 0.35)",
     borderRadius: 16,
-    maxHeight: 240,
+    maxHeight: 250,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.9,
     shadowRadius: 12,
     elevation: 10,
     overflow: "hidden",
+  },
+  dropdownHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  dropdownHeaderText: {
+    color: "#8E8E93",
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.8,
   },
   resultItem: {
     flexDirection: "row",
@@ -245,7 +278,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "rgba(255, 51, 68, 0.15)",
+    backgroundColor: "rgba(0, 0, 255, 0.15)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
