@@ -139,6 +139,9 @@ function Sync-AndroidLauncherAssets {
   Add-Type -AssemblyName System.Drawing
   $iconPath = Join-Path $assetsDir 'gs.png'
   if (!(Test-Path $iconPath)) {
+    $iconPath = Join-Path $assetsDir 'icon.png'
+  }
+  if (!(Test-Path $iconPath)) {
     throw "No existe el icono esperado en: $iconPath"
   }
 

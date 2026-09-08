@@ -40,15 +40,15 @@ if ($envFile) {
 
 $androidDir = Resolve-Path (Join-Path $PSScriptRoot '..\android')
 
-# Force-disable New Architecture for stability
+# Enable New Architecture (required by React Native Reanimated 4 and Worklets)
 $gradleProps = Join-Path $androidDir 'gradle.properties'
 if (Test-Path $gradleProps) {
   $gp = Get-Content -Raw -Path $gradleProps
   if ($gp -match '(?m)^newArchEnabled=') {
-    $gp = $gp -replace '(?m)^newArchEnabled=.*$', 'newArchEnabled=false'
+    $gp = $gp -replace '(?m)^newArchEnabled=.*$', 'newArchEnabled=true'
   }
   else {
-    $gp = $gp.TrimEnd() + "`nnewArchEnabled=false`n"
+    $gp = $gp.TrimEnd() + "`nnewArchEnabled=true`n"
   }
   Set-Content -Encoding ASCII -Path $gradleProps -Value $gp
 }
@@ -96,7 +96,9 @@ if (Test-Path $apk) {
   Write-Output "APK release generado: $apk"
   $apkDestination = Join-Path $exportDir "$artifactBaseName.apk"
   Copy-Item -Force -Path $apk -Destination $apkDestination
-  Write-Output "Copiado APK a: $apkDestination"
+  $friendlyApk = Join-Path $exportDir "xpress-v$($syncResult.Version).apk"
+  Copy-Item -Force -Path $apk -Destination $friendlyApk
+  Write-Output "Copiado APK a: $apkDestination y $friendlyApk"
 }
 else {
   Write-Output "Build terminó, pero no encontré el APK esperado en: $apk"
@@ -106,7 +108,9 @@ if (Test-Path $aab) {
   Write-Output "AAB release generado: $aab"
   $aabDestination = Join-Path $exportDir "$artifactBaseName.aab"
   Copy-Item -Force -Path $aab -Destination $aabDestination
-  Write-Output "Copiado AAB a: $aabDestination"
+  $friendlyAab = Join-Path $exportDir "xpress-v$($syncResult.Version).aab"
+  Copy-Item -Force -Path $aab -Destination $friendlyAab
+  Write-Output "Copiado AAB a: $aabDestination y $friendlyAab"
 }
 else {
   Write-Output "Build terminó, pero no encontré el AAB esperado en: $aab"
