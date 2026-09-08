@@ -1,7 +1,9 @@
+import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, Text, Image, Pressable, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DriverLiveNavigationModal } from "../components/driver/DriverLiveNavigationModal";
 import { useAuth } from "../auth/AuthContext";
 import { colors } from "../theme/colors";
 import { formatCop } from "../utils/currency";
@@ -58,6 +60,7 @@ export function DriverHomeView({
   const auth = useAuth();
   const insets = useSafeAreaInsets();
   const displayName = auth.user?.username || auth.user?.email?.split("@")[0] || "Ejecutivo";
+  const [liveNavVisible, setLiveNavVisible] = useState(false);
 
   const renderActiveService = () => {
     const activeStatuses = ["ASSIGNED", "MATCHED", "ACCEPTED", "ARRIVED", "IN_PROGRESS"];
@@ -165,6 +168,17 @@ export function DriverHomeView({
             </Text>
           </View>
         </View>
+
+        {/* Live Navigation Trigger Button */}
+        <Pressable
+          style={styles.liveNavBtn}
+          onPress={() => setLiveNavVisible(true)}
+        >
+          <Ionicons name="navigate-circle" size={20} color="#FFFFFF" />
+          <Text style={styles.liveNavBtnText}>
+            {status === "IN_PROGRESS" ? "Navegar hacia Destino" : "Iniciar Búsqueda / Navegar"}
+          </Text>
+        </Pressable>
 
         {/* Executive Flow Action Buttons */}
         <View style={styles.activeFlowBtnRow}>
@@ -483,6 +497,16 @@ export function DriverHomeView({
       <Pressable style={styles.fabSupport} onPress={onOpenSupport}>
         <Ionicons name="headset" size={28} color="#fff" />
       </Pressable>
+
+      <DriverLiveNavigationModal
+        visible={liveNavVisible}
+        ride={attentionRide}
+        onClose={() => setLiveNavVisible(false)}
+        onNotifyArrived={onNotifyArrived}
+        onDriverAction={onDriverAction}
+        onNavigateChat={onNavigateChat}
+        rideActionLoading={rideActionLoading}
+      />
     </View>
   );
 }
@@ -1065,6 +1089,28 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 11,
     fontWeight: "900",
+  },
+  liveNavBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0000FF",
+    paddingVertical: 13,
+    borderRadius: 14,
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 4,
+    shadowColor: "#0000FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  liveNavBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 0.4,
   },
   activeFlowBtnRow: {
     flexDirection: "row",

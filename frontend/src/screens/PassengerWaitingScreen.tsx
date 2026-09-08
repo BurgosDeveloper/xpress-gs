@@ -38,6 +38,7 @@ export function PassengerWaitingScreen({ route, navigation }: Props) {
   const [cancelLoading, setCancelLoading] = useState(false);
 
   const firstLoadRef = useRef(true);
+  const matchedDriverIdRef = useRef<string | null>(null);
 
   async function refresh() {
     if (!token) return;
@@ -46,6 +47,10 @@ export function PassengerWaitingScreen({ route, navigation }: Props) {
     if (showSpinner) setDriverPhoneLoading(true);
     try {
       const res = await apiGetRideById(token, { rideId });
+
+      if (res.ride?.matchedDriver?.id) {
+        matchedDriverIdRef.current = String(res.ride.matchedDriver.id);
+      }
 
       const phone = res.ride?.matchedDriver?.phone ?? null;
       setDriverPhone(phone);
@@ -169,6 +174,20 @@ export function PassengerWaitingScreen({ route, navigation }: Props) {
     const cleanups = [
       subscribeRealtimeEvent("ride:matched", handleRealtimeRideChange),
       subscribeRealtimeEvent("ride:changed", handleRealtimeRideChange),
+      subscribeRealtimeEvent("driver_location_update", (payload: any) => {
+        if (!matchedDriverIdRef.current) return;
+        if (String(payload?.driverId) === String(matchedDriverIdRef.current)) {
+          const lat = Number(payload.lat);
+          const lng = Number(payload.lng);
+          if (Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0) {
+            setDriverLoc({
+              lat,
+              lng,
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }),
     ];
 
     return () => {

@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppMap, type AppMapMarker, type AppMapRef, type LatLng, type Region } from "./AppMap";
-
+import { MapPointMarker } from "./map/MapPointMarker";
 import { colors } from "../theme/colors";
+import { getDrivingRoute } from "../utils/directions";
 import { MapPreviewModal } from "./MapPreviewModal";
 import type { MapPoint } from "./MapPreviewModal";
 
@@ -28,8 +29,9 @@ export function MiniMeetMap(props: {
   driverIconName?: keyof typeof Ionicons.glyphMap;
   passengerIconName?: keyof typeof Ionicons.glyphMap;
 }) {
-  const height = props.height ?? 130;
+  const height = props.height ?? 140;
   const [previewVisible, setPreviewVisible] = useState(false);
+  const [route, setRoute] = useState<MapPoint[] | null>(null);
 
   const mapRef = useRef<AppMapRef | null>(null);
   const userInteractedRef = useRef(false);
@@ -40,6 +42,21 @@ export function MiniMeetMap(props: {
   );
 
   useEffect(() => {
+    let cancelled = false;
+    async function fetchRoute() {
+      if (!props.driver || !props.passenger) return;
+      const res = await getDrivingRoute({ from: props.driver, to: props.passenger });
+      if (!cancelled && res?.path?.length) {
+        setRoute(res.path.map((p) => ({ lat: p.latitude, lng: p.longitude })));
+      }
+    }
+    void fetchRoute();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.driver.lat, props.driver.lng, props.passenger.lat, props.passenger.lng]);
+
+  useEffect(() => {
     if (userInteractedRef.current) return;
     const coords = [props.driver, props.passenger]
       .filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
@@ -48,7 +65,7 @@ export function MiniMeetMap(props: {
 
     const t = setTimeout(() => {
       if (userInteractedRef.current) return;
-      mapRef.current?.fitToCoordinates(coords, { edgePadding: { top: 20, right: 20, bottom: 20, left: 20 }, animated: false });
+      mapRef.current?.fitToCoordinates(coords, { edgePadding: { top: 25, right: 25, bottom: 25, left: 25 }, animated: false });
     }, 0);
     return () => clearTimeout(t);
   }, [props.driver.lat, props.driver.lng, props.passenger.lat, props.passenger.lng]);
@@ -74,30 +91,30 @@ export function MiniMeetMap(props: {
             .filter((p) => p && Number.isFinite(p.lat) && Number.isFinite(p.lng))
             .map(toLatLng);
           if (coords.length < 2) return;
-          mapRef.current?.fitToCoordinates(coords, { edgePadding: { top: 20, right: 20, bottom: 20, left: 20 }, animated: false });
+          mapRef.current?.fitToCoordinates(coords, { edgePadding: { top: 25, right: 25, bottom: 25, left: 25 }, animated: false });
         }}
+        polyline={
+          route && route.length >= 2
+            ? {
+                id: "meet-route",
+                coordinates: route.map(toLatLng),
+                strokeColor: colors.neon,
+                strokeWidth: 4,
+              }
+            : undefined
+        }
         markers={[
           {
             id: "passenger",
             coordinate: toLatLng(props.passenger),
-            pinColor: colors.neon,
-            children: (
-              <View style={[styles.pin, styles.pinPassenger]}>
-                <Ionicons name={props.passengerIconName ?? "person"} size={14} color={colors.text} />
-                <Text style={styles.pinText}>Cliente</Text>
-              </View>
-            ),
+            anchor: { x: 0.5, y: 0.88 },
+            children: <MapPointMarker type="A" label="A" tag="RECOGIDA" />,
           } satisfies AppMapMarker,
           {
             id: "driver",
             coordinate: toLatLng(props.driver),
-            pinColor: colors.text,
-            children: (
-              <View style={[styles.pin, styles.pinDriver]}>
-                <Ionicons name={props.driverIconName ?? "car"} size={14} color={colors.text} />
-                <Text style={styles.pinText}>Tú</Text>
-              </View>
-            ),
+            anchor: { x: 0.5, y: 0.5 },
+            children: <MapPointMarker type="DRIVER" />,
           } satisfies AppMapMarker,
         ]}
       />
@@ -114,18 +131,19 @@ export function MiniMeetMap(props: {
       <MapPreviewModal
         visible={previewVisible}
         onClose={() => setPreviewVisible(false)}
-        title="Ubicaciones"
+        title="Ubicación del ejecutivo"
+        polyline={route}
         markers={[
           {
             id: "passenger",
             coordinate: props.passenger,
-            title: "Cliente",
+            title: "A",
             pinColor: colors.neon,
           },
           {
             id: "driver",
             coordinate: props.driver,
-            title: "Tú",
+            title: "DRIVER",
             pinColor: colors.text,
           },
         ]}
