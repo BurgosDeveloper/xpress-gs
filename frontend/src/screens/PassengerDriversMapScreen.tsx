@@ -526,6 +526,15 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
     }
   }
 
+  // Estimación y trazado automático cada vez que se actualice el destino o el tipo de servicio
+  useEffect(() => {
+    if (!token || !center || !dropoff) return;
+    const timer = setTimeout(() => {
+      void requestEstimate({ showLoading: false });
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [dropoff?.lat, dropoff?.lng, wantedType, wantedMode, token, center?.lat, center?.lng]);
+
   async function estimateApprox() {
     if (!dropoff) {
       setError("Tocá el mapa para elegir el destino");
@@ -548,18 +557,35 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
       setError("Tocá el mapa para elegir el destino");
       return;
     }
-    if (!estimate || estimateKey !== currentRouteKey) {
-      Alert.alert("Falta aproximado", "Primero calculá el aproximado para este destino y tipo de vehículo.");
-      return;
-    }
+
     requestingRef.current = true;
     setRequesting(true);
     setError(null);
 
     try {
-      const ensuredRoute = routePreviewKey === currentRouteKey && routePreview?.routePath?.length ? routePreview : await ensureRoutePreview({ showError: false });
+      let resolvedEstimate = estimate;
+      if (!resolvedEstimate) {
+        resolvedEstimate = await requestEstimate({ showLoading: true, openWhatsappOnNegotiate: true });
+        if (!resolvedEstimate) {
+          setRequesting(false);
+          requestingRef.current = false;
+          return;
+        }
+      }
+
+      const ensuredRoute =
+        routePreviewKey === currentRouteKey && routePreview?.routePath?.length
+          ? routePreview
+          : await ensureRoutePreview({ showError: false });
 
       const addr = await ensureAddresses({ pickup: center, dropoff });
+
+      const finalPrice =
+        customFare !== null && customFare !== undefined
+          ? customFare
+          : resolvedEstimate?.estimatedPrice != null
+          ? Number(resolvedEstimate.estimatedPrice)
+          : undefined;
 
       const created = await apiCreateRide(token, {
         serviceModeWanted: wantedMode,
@@ -568,7 +594,7 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
         dropoff: { lat: dropoff.lat, lng: dropoff.lng, address: addr.dropoffAddress ?? undefined },
         ...currentRoutePayload(ensuredRoute),
         searchRadiusM: matchingRadiusM,
-        offeredPrice: customFare ?? undefined,
+        offeredPrice: finalPrice,
       });
 
       await setActiveRideOffersRideId(created.ride.id);
@@ -634,10 +660,11 @@ export function PassengerDriversMapScreen({ navigation, route }: Props) {
             .map((z) => ({
               id: z.id,
               geojson: z.geojson,
-              // Hub: un poco más marcado
-              fillOpacity: z.isHub ? 0.16 : 0.1,
-              lineOpacity: z.isHub ? 0.7 : 0.45,
-              lineWidth: z.isHub ? 2.5 : 2,
+              fillColor: "rgba(30, 64, 175, 0.02)",
+              lineColor: "rgba(30, 64, 175, 0.25)",
+              fillOpacity: z.isHub ? 0.05 : 0.02,
+              lineOpacity: z.isHub ? 0.35 : 0.2,
+              lineWidth: z.isHub ? 2 : 1.5,
             }));
 
           if (dropoff) {

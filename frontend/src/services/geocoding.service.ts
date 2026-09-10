@@ -447,7 +447,131 @@ function getTachiraScore(p: GeocodingPlace, queryNorm: string, proximity = DEFAU
 
 /**
  * Busca direcciones y lugares combinando catálogo local instantáneo con
- * la API de Mapbox Places Geocoding v5 acotada estrictamente a Táchira.
+/**
+ * Busca ubicaciones en OpenStreetMap / Photon (cobertura total de comercios, panaderías, clínicas, calles y sectores de San Cristóbal y Táchira).
+ */
+async function searchPhotonPlaces(query: string, proximity = DEFAULT_PROXIMITY): Promise<GeocodingPlace[]> {
+  try {
+    const url = new URL("https://photon.komoot.io/api/");
+    url.searchParams.set("q", query);
+    url.searchParams.set("lat", String(proximity.lat));
+    url.searchParams.set("lon", String(proximity.lng));
+    url.searchParams.set("bbox", "-72.60,7.30,-72.00,8.40");
+    url.searchParams.set("limit", "10");
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!res.ok) return [];
+    const json = await res.json();
+    const features = Array.isArray(json?.features) ? json.features : [];
+
+    return features
+      .map((f: any) => {
+        const coords = f?.geometry?.coordinates;
+        if (!Array.isArray(coords) || coords.length < 2) return null;
+        const lng = Number(coords[0]);
+        const lat = Number(coords[1]);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+        const p = f.properties || {};
+        const name = p.name || p.street || query;
+        const parts = [
+          p.name,
+          p.street,
+          p.district || p.locality,
+          p.city,
+          "Táchira",
+        ].filter(Boolean);
+
+        const uniqueParts: string[] = [];
+        for (const part of parts) {
+          if (!uniqueParts.some((u) => u.toLowerCase() === String(part).toLowerCase())) {
+            uniqueParts.push(String(part));
+          }
+        }
+
+        return {
+          id: `osm-${p.osm_id || `${lat},${lng}`}`,
+          name: String(name),
+          fullAddress: uniqueParts.join(", "),
+          lat,
+          lng,
+        };
+      })
+      .filter((item: any): item is GeocodingPlace => item !== null);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Busca en Mapbox Places Geocoding v5 acotado al estado Táchira.
+ */
+async function searchMapboxPlaces(query: string, proximity = DEFAULT_PROXIMITY): Promise<GeocodingPlace[]> {
+  const token = await getMapboxToken();
+  if (!token) return [];
+
+  try {
+    const url = new URL(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`
+    );
+    url.searchParams.set("access_token", token);
+    url.searchParams.set("proximity", `${proximity.lng},${proximity.lat}`);
+    url.searchParams.set("country", "ve");
+    url.searchParams.set("bbox", "-72.60,7.30,-72.00,8.40");
+    url.searchParams.set("language", "es");
+    url.searchParams.set("types", "poi,address,neighborhood,locality,place");
+    url.searchParams.set("limit", "10");
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const json = await res.json();
+      const features = Array.isArray(json?.features) ? json.features : [];
+
+      return features
+        .map((f: any) => {
+          const coords = Array.isArray(f.center) ? f.center : null;
+          if (!coords || coords.length < 2) return null;
+          const lng = Number(coords[0]);
+          const lat = Number(coords[1]);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+          return {
+            id: String(f.id || `${lat},${lng}`),
+            name: String(f.text || f.place_name || query),
+            fullAddress: String(f.place_name || f.text || query),
+            lat,
+            lng,
+          };
+        })
+        .filter((p: any): p is GeocodingPlace => p !== null);
+    }
+  } catch {
+    // Silencioso
+  }
+  return [];
+}
+
+/**
+ * Busca direcciones y lugares combinando catálogo local instantáneo con
+ * Photon (OpenStreetMap) y Mapbox Places Geocoding v5 acotado estrictamente a Táchira.
  */
 export async function searchPlaces(
   query: string,
@@ -466,59 +590,15 @@ export async function searchPlaces(
   // 1. Coincidencias locales inmediatas (0ms)
   const localMatches = searchLocalPlaces(trimmed);
 
-  // 2. Búsqueda remota en Mapbox Places orientada a Táchira
-  let mapboxMatches: GeocodingPlace[] = [];
-  const token = await getMapboxToken();
+  // 2. Búsqueda remota concurrente en Photon (OpenStreetMap) y Mapbox Places
+  const [photonMatches, mapboxMatches] = await Promise.all([
+    searchPhotonPlaces(trimmed, proximity),
+    searchMapboxPlaces(trimmed, proximity),
+  ]);
 
-  if (token) {
-    try {
-      const url = new URL(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(trimmed)}.json`
-      );
-      url.searchParams.set("access_token", token);
-      url.searchParams.set("proximity", `${proximity.lng},${proximity.lat}`);
-      url.searchParams.set("country", "ve");
-      // Bounding box que cubre todo San Cristóbal y el estado Táchira
-      url.searchParams.set("bbox", "-72.60,7.30,-72.00,8.40");
-      url.searchParams.set("language", "es");
-      url.searchParams.set("types", "poi,address,neighborhood,locality,place");
-      url.searchParams.set("limit", "10");
-
-      const res = await fetch(url.toString(), {
-        method: "GET",
-        headers: { Accept: "application/json" },
-      });
-
-      if (res.ok) {
-        const json = await res.json();
-        const features = Array.isArray(json?.features) ? json.features : [];
-
-        mapboxMatches = features
-          .map((f: any) => {
-            const coords = Array.isArray(f.center) ? f.center : null;
-            if (!coords || coords.length < 2) return null;
-            const lng = Number(coords[0]);
-            const lat = Number(coords[1]);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-
-            return {
-              id: String(f.id || `${lat},${lng}`),
-              name: String(f.text || f.place_name || trimmed),
-              fullAddress: String(f.place_name || f.text || trimmed),
-              lat,
-              lng,
-            };
-          })
-          .filter((p: any): p is GeocodingPlace => p !== null);
-      }
-    } catch {
-      // Fallback a Expo Location si hay fallo con Mapbox
-    }
-  }
-
-  // 3. Fallback adicional con Expo Location si Mapbox no retornó nada
+  // 3. Fallback adicional con Expo Location si los servicios anteriores no retornaron nada
   let expoMatches: GeocodingPlace[] = [];
-  if (localMatches.length === 0 && mapboxMatches.length === 0) {
+  if (localMatches.length === 0 && photonMatches.length === 0 && mapboxMatches.length === 0) {
     try {
       const results = await Location.geocodeAsync(`${trimmed}, San Cristóbal, Táchira`);
       if (Array.isArray(results) && results.length > 0) {
@@ -536,7 +616,7 @@ export async function searchPlaces(
   }
 
   // 4. Combinar, deduplicar por cercanía geográfica (<50 metros)
-  const combined = [...localMatches, ...mapboxMatches, ...expoMatches];
+  const combined = [...localMatches, ...photonMatches, ...mapboxMatches, ...expoMatches];
   const uniquePlaces: GeocodingPlace[] = [];
 
   for (const place of combined) {

@@ -55,6 +55,7 @@ import { AdminHomeView } from "./AdminHomeView";
 import { subscribeRealtimeEvent } from "../realtime/socket";
 import { getMatchedDrivingTraceDistanceMeters, getTraceStraightDistanceMeters, type TimedCoords } from "../utils/directions";
 import { DriverHomeView } from "./DriverHomeView";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
@@ -1286,26 +1287,28 @@ export function HomeScreen({ navigation }: Props) {
 
   if ((role as any) === "DRIVER") {
     return (
-      <DriverHomeView
-        attentionRide={attentionRide}
-        nearbyRequests={nearbyRequests}
-        completedRides={completedRidesCount}
-        rating={auth.user?.driver?.avgRating != null ? Number(auth.user.driver.avgRating) : driverRating}
-        earnings={driverEarnings}
-        balance={driverBalance}
-        onNavigateOfferDetails={(rideId) => navigation.navigate("DriverOfferDetails", { offerId: rideId })}
-        onRefresh={() => refreshNearbyRequests({ showLoading: true })}
-        onOpenHistory={() => navigation.navigate("RidesHistory")}
-        onOpenBalance={() => navigation.navigate("Credits")}
-        onOpenAvailable={() => {}}
-        onOpenSupport={openOperator}
-        onOpenProfile={() => navigation.navigate("Profile")}
-        onDriverAction={driverAction}
-        onNotifyArrived={notifyPassengerArrived}
-        onNavigateRideDetails={(rideId) => navigation.navigate("RideDetails", { rideId })}
-        onNavigateChat={(rideId) => navigation.navigate("Chat", { rideId })}
-        rideActionLoading={rideActionLoading}
-      />
+      <ErrorBoundary fallbackMessage="Hubo un detalle en la pantalla de chofer. Tocá para recargar." onReset={() => void refreshRide({ showLoading: true })}>
+        <DriverHomeView
+          attentionRide={attentionRide}
+          nearbyRequests={nearbyRequests}
+          completedRides={completedRidesCount}
+          rating={auth.user?.driver?.avgRating != null ? Number(auth.user.driver.avgRating) : driverRating}
+          earnings={driverEarnings}
+          balance={driverBalance}
+          onNavigateOfferDetails={(rideId) => navigation.navigate("DriverOfferDetails", { offerId: rideId })}
+          onRefresh={() => refreshNearbyRequests({ showLoading: true })}
+          onOpenHistory={() => navigation.navigate("RidesHistory")}
+          onOpenBalance={() => navigation.navigate("Credits")}
+          onOpenAvailable={() => {}}
+          onOpenSupport={openOperator}
+          onOpenProfile={() => navigation.navigate("Profile")}
+          onDriverAction={driverAction}
+          onNotifyArrived={notifyPassengerArrived}
+          onNavigateRideDetails={(rideId) => navigation.navigate("RideDetails", { rideId })}
+          onNavigateChat={(rideId) => navigation.navigate("Chat", { rideId })}
+          rideActionLoading={rideActionLoading}
+        />
+      </ErrorBoundary>
     );
   }
 

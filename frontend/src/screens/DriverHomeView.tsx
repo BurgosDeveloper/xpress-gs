@@ -61,13 +61,14 @@ export function DriverHomeView({
   const insets = useSafeAreaInsets();
   const displayName = auth.user?.username || auth.user?.email?.split("@")[0] || "Ejecutivo";
   const [liveNavVisible, setLiveNavVisible] = useState(false);
+  const activeRideId = attentionRide?.id != null ? String(attentionRide.id) : null;
+  const unreadCount = useUnreadChatCount(activeRideId);
 
   const renderActiveService = () => {
     const activeStatuses = ["ASSIGNED", "MATCHED", "ACCEPTED", "ARRIVED", "IN_PROGRESS"];
     if (!attentionRide || !activeStatuses.includes(attentionRide.status)) return null;
 
     const rideId = String(attentionRide.id);
-    const unreadCount = useUnreadChatCount(rideId);
     const shortId = rideId.slice(-6);
     const serviceType = attentionRide.serviceType || attentionRide.serviceTypeWanted || "TRASLADO";
     const status = attentionRide.status;

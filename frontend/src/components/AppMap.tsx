@@ -62,6 +62,7 @@ type Props = {
   markers?: AppMapMarker[];
   polyline?: AppMapPolyline | null;
   polygons?: AppMapPolygon[];
+  styleURL?: string;
 };
 
 function normalizeGeoJsonToFeature(shape: unknown) {
@@ -265,7 +266,7 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
     >
       <MapboxGL.MapView
         style={StyleSheet.absoluteFill}
-        styleURL={MapboxGL.StyleURL.Dark}
+        styleURL={props.styleURL ?? MapboxGL.StyleURL.Street}
         rotateEnabled={interactive ? (props.rotateEnabled ?? true) : false}
         pitchEnabled={interactive ? (props.pitchEnabled ?? false) : false}
         scrollEnabled={interactive ? (props.scrollEnabled ?? true) : false}
@@ -290,11 +291,11 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
           if (!feature) return null;
 
           const id = String(p.id);
-          const fillColor = p.fillColor ?? colors.neon;
-          const lineColor = p.lineColor ?? colors.neon;
-          const fillOpacity = typeof p.fillOpacity === "number" ? p.fillOpacity : 0.12;
-          const lineOpacity = typeof p.lineOpacity === "number" ? p.lineOpacity : 0.5;
-          const lineWidth = typeof p.lineWidth === "number" ? p.lineWidth : 2;
+          const fillColor = p.fillColor ?? "rgba(59, 130, 246, 0.04)";
+          const lineColor = p.lineColor ?? "rgba(59, 130, 246, 0.3)";
+          const fillOpacity = typeof p.fillOpacity === "number" ? p.fillOpacity : 0.04;
+          const lineOpacity = typeof p.lineOpacity === "number" ? p.lineOpacity : 0.3;
+          const lineWidth = typeof p.lineWidth === "number" ? p.lineWidth : 1.5;
 
           return (
             <MapboxGL.ShapeSource key={id} id={`poly-${id}`} shape={feature as any}>
