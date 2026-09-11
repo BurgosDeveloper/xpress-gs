@@ -12,6 +12,7 @@ node_modules/
 *.keystore
 *.jks
 *-firebase-adminsdk-*.json
+*firebase-service-account*.json
 
 # Build outputs and temporary files
 dist/
