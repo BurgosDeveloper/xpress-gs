@@ -258,36 +258,41 @@ export async function createRide(params: {
   });
   if (!passenger) return { ok: false as const, error: "Passenger profile not found" };
 
-  const activeRide = await prisma.rideRequest.findFirst({
+  // Si tiene un viaje ya tomado por un chofer (ASSIGNED, ACCEPTED, MATCHED, IN_PROGRESS), debe cancelarlo primero.
+  const committedRide = await prisma.rideRequest.findFirst({
     where: {
       passengerId: passenger.id,
-      status: { in: [RideStatus.OPEN, RideStatus.ASSIGNED, RideStatus.ACCEPTED, RideStatus.MATCHED, RideStatus.IN_PROGRESS] },
+      status: { in: [RideStatus.ASSIGNED, RideStatus.ACCEPTED, RideStatus.MATCHED, RideStatus.IN_PROGRESS] },
     },
     select: { id: true, status: true },
     orderBy: { updatedAt: "desc" },
   });
 
-  if (activeRide) {
+  if (committedRide) {
     return {
       ok: false as const,
       status: 409 as const,
-      error: "Ya tenés un servicio activo. Cancelalo antes de solicitar otro.",
+      error: "Ya tenés un servicio en curso o con chofer asignado. Cancelalo antes de solicitar otro.",
     };
   }
 
-  const openOffer = await prisma.rideOffer.findFirst({
-    where: { passengerId: passenger.id, status: OfferStatus.OPEN },
-    select: { id: true },
-    orderBy: { updatedAt: "desc" },
+  // Si tiene solicitudes u ofertas previas aún en estado OPEN (sin chofer asignado),
+  // las cancelamos automáticamente para que nunca quede bloqueado si volvió atrás o cambió de destino.
+  await prisma.rideRequest.updateMany({
+    where: {
+      passengerId: passenger.id,
+      status: RideStatus.OPEN,
+    },
+    data: { status: RideStatus.CANCELLED },
   });
 
-  if (openOffer) {
-    return {
-      ok: false as const,
-      status: 409 as const,
-      error: "Ya tenés una contraoferta activa. Cancelala antes de solicitar un traslado.",
-    };
-  }
+  await prisma.rideOffer.updateMany({
+    where: {
+      passengerId: passenger.id,
+      status: OfferStatus.OPEN,
+    },
+    data: { status: OfferStatus.CANCELLED },
+  });
 
   // Zonas con precio fijo:
   // - Dentro de SC (hub) => tarifa normal.

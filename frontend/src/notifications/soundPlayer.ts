@@ -14,17 +14,17 @@ let playChain: Promise<void> = Promise.resolve();
 
 async function ensureAudioMode() {
   if (audioModeReady) return;
-  audioModeReady = true;
   try {
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
-      shouldDuckAndroid: false,
+      shouldDuckAndroid: true,
       playThroughEarpieceAndroid: false,
     });
-  } catch {
-    // best-effort
+    audioModeReady = true;
+  } catch (err) {
+    audioModeReady = false; // Permite reintento en siguiente llamada
   }
 }
 
@@ -34,6 +34,7 @@ export function playNotificationSound(soundName: SoundName) {
     const source = SOUND_ASSETS[soundName];
     if (!source) return;
 
+    let soundInstance: Audio.Sound | null = null;
     try {
       await ensureAudioMode();
       const { sound } = await Audio.Sound.createAsync(
@@ -44,14 +45,17 @@ export function playNotificationSound(soundName: SoundName) {
           isLooping: false,
         }
       );
+      soundInstance = sound;
 
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.isLoaded && status.didJustFinish) {
           void sound.unloadAsync().catch(() => {});
         }
       });
-    } catch {
-      // best-effort
+    } catch (err) {
+      if (soundInstance) {
+        void soundInstance.unloadAsync().catch(() => {});
+      }
     }
   });
 

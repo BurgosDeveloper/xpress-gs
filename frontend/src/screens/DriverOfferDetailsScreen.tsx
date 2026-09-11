@@ -12,6 +12,8 @@ import { SecondaryButton } from "../components/SecondaryButton";
 import { colors } from "../theme/colors";
 import { useAuth } from "../auth/AuthContext";
 import { apiGetRideById, apiDriverOfferRide } from "../rides/rides.api";
+import { apiGetOfferForDriver, apiCommitOffer } from "../offers/offers.api";
+import { ensureForegroundPermission, getCurrentCoords, getLastKnownCoords } from "../utils/location";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { serviceTypeLabel } from "../utils/serviceType";
@@ -42,6 +44,7 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
   const offerId = route.params.offerId;
 
   const [offer, setOffer] = useState<any | null>(null);
+  const [isOfferEntity, setIsOfferEntity] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
@@ -118,15 +121,40 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiGetRideById(token, { rideId: offerId });
-      setOffer(res.ride);
-      if (Array.isArray(res.ride?.candidates)) {
-        const isMine = res.ride.candidates.some((c: any) => c.driverId === auth.user?.id || c.status === "OFFERED");
+      let found: any = null;
+      let isOfferType = false;
+
+      try {
+        const res = await apiGetRideById(token, { rideId: offerId });
+        if (res.ride) found = res.ride;
+      } catch {
+        // Podría ser un RideOffer
+      }
+
+      if (!found) {
+        try {
+          const offerRes = await apiGetOfferForDriver(token, offerId);
+          if (offerRes.offer) {
+            found = offerRes.offer;
+            isOfferType = true;
+          }
+        } catch {
+          // fallo en ambos
+        }
+      }
+
+      if (!found) throw new Error("No se pudo encontrar el servicio u oferta");
+
+      setIsOfferEntity(isOfferType);
+      setOffer(found);
+
+      if (Array.isArray(found.candidates)) {
+        const isMine = found.candidates.some((c: any) => c.driverId === auth.user?.id || c.status === "OFFERED");
         if (isMine) setAlreadyOffered(true);
       }
-      if (res.ride?.pickupLat && res.ride?.dropoffLat) {
-        const p = { lat: Number(res.ride.pickupLat), lng: Number(res.ride.pickupLng) };
-        const d = { lat: Number(res.ride.dropoffLat), lng: Number(res.ride.dropoffLng) };
+      if (found.pickupLat && found.dropoffLat) {
+        const p = { lat: Number(found.pickupLat), lng: Number(found.pickupLng) };
+        const d = { lat: Number(found.dropoffLat), lng: Number(found.dropoffLng) };
         if (Number.isFinite(p.lat) && Number.isFinite(p.lng) && Number.isFinite(d.lat) && Number.isFinite(d.lng)) {
           const r = await getDrivingRoute({ from: p, to: d });
           if (r?.path?.length) setRoutePath(r.path.map((pt) => ({ lat: pt.latitude, lng: pt.longitude })));
@@ -182,8 +210,16 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
     setError(null);
 
     try {
-      await apiDriverOfferRide(token, { rideId: offerId, amount: Number(offer?.estimatedPrice || 0) });
-      Alert.alert("¡Postulación enviada!", "Te postulaste correctamente. El cliente evaluará a los ejecutivos postulados.");
+      if (isOfferEntity) {
+        const ok = await ensureForegroundPermission();
+        if (!ok) throw new Error("Necesitás habilitar la ubicación para aceptar la oferta");
+        const coords = (await getLastKnownCoords()) || (await getCurrentCoords());
+        await apiCommitOffer(token, offerId, { lat: coords.lat, lng: coords.lng });
+        Alert.alert("¡Oferta aceptada!", "Te comprometiste con la contraoferta del cliente.");
+      } else {
+        await apiDriverOfferRide(token, { rideId: offerId, amount: Number(offer?.estimatedPrice || 0) });
+        Alert.alert("¡Postulación enviada!", "Te postulaste correctamente. El cliente evaluará a los ejecutivos postulados.");
+      }
       navigation.goBack();
     } catch (e) {
       setAlreadyOffered(false);
@@ -343,7 +379,10 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
 
               <View style={styles.kvRow}>
                 <Ionicons name="cash-outline" size={16} color={colors.mutedText} />
-                <Text style={styles.line}>Precio del Servicio: {formatCop(Number(offer.estimatedPrice))}</Text>
+                <Text style={styles.line}>
+                  {isOfferEntity ? "Contraoferta del Cliente: " : "Precio del Servicio: "}
+                  {formatCop(Number(offer.offeredPrice ?? offer.estimatedPrice ?? 0))}
+                </Text>
               </View>
 
               <View style={styles.kvRow}>
@@ -363,9 +402,19 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
               </View>
 
               <PrimaryButton
-                label={alreadyOffered ? "Postulado" : committing ? "Postulándose..." : "Postularme"}
+                label={
+                  isOfferEntity
+                    ? committing
+                      ? "Aceptando..."
+                      : "Aceptar Contraoferta"
+                    : alreadyOffered
+                    ? "Postulado"
+                    : committing
+                    ? "Postulándose..."
+                    : "Postularme"
+                }
                 onPress={() => void commit()}
-                disabled={committing || alreadyOffered}
+                disabled={committing || (!isOfferEntity && alreadyOffered)}
               />
               </>
             ) : (

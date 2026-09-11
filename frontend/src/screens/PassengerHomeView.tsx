@@ -21,6 +21,7 @@ const GLASS_BORDER = colors.glassBorder;
 
 type Props = {
   attentionRide: any | null;
+  openOffer?: any | null;
   rideLoading: boolean;
   rideError: string | null;
   userHasActiveRide: boolean;
@@ -37,6 +38,7 @@ type Props = {
   onNavigateChat: (rideId: string) => void;
   onCallDriverDirect: () => void;
   onCancelRide: () => void;
+  onCancelOffer?: () => void;
   onOpenProfile: () => void;
   onOpenSupport: () => void;
   onSubmitRating?: (stars: number) => void;
@@ -44,6 +46,7 @@ type Props = {
 
 export function PassengerHomeView({
   attentionRide,
+  openOffer,
   rideLoading,
   rideError,
   userHasActiveRide,
@@ -60,6 +63,7 @@ export function PassengerHomeView({
   onNavigateChat,
   onCallDriverDirect,
   onCancelRide,
+  onCancelOffer,
   onOpenProfile,
   onOpenSupport,
   onSubmitRating,
@@ -80,12 +84,16 @@ export function PassengerHomeView({
           onOpenProfile={onOpenProfile}
         />
 
-        {/* Active Ride Section */}
-        {attentionRide || rideLoading || rideError ? (
+        {/* Active Ride or Active Offer Section */}
+        {attentionRide || openOffer || rideLoading || rideError ? (
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Tu servicio actual</Text>
-              {rideLoading && <ActivityIndicator size="small" color={colors.neon} style={{ marginLeft: 8 }} />}
+              <Text style={styles.sectionTitle}>
+                {attentionRide ? "Tu servicio actual" : openOffer ? "Tu contraoferta publicada" : "Tu servicio actual"}
+              </Text>
+              {(rideLoading || (openOffer && !attentionRide)) && (
+                <ActivityIndicator size="small" color={colors.neon} style={{ marginLeft: 8 }} />
+              )}
             </View>
 
             {rideError ? (
@@ -219,6 +227,47 @@ export function PassengerHomeView({
                   </Pressable>
                 ) : null}
               </View>
+            ) : openOffer ? (
+              <View style={styles.activeCard}>
+                <View style={styles.activeHeaderRow}>
+                  <View style={[styles.activeStatusBadge, { backgroundColor: "#FF9800" }]}>
+                    <Ionicons name="time" size={14} color="#000" />
+                    <Text style={[styles.activeStatusText, { color: "#000" }]}>
+                      Buscando chofer...
+                    </Text>
+                  </View>
+                  <Text style={[styles.activePrice, { color: "#FF9800" }]}>
+                    {openOffer.offeredPrice ? formatCop(Number(openOffer.offeredPrice)) : ""}
+                  </Text>
+                </View>
+
+                <View style={{ gap: 6, marginVertical: 12 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.neon }} />
+                    <Text style={{ color: "#fff", fontSize: 13, flex: 1 }} numberOfLines={1}>
+                      <Text style={{ color: colors.mutedText, fontWeight: "bold" }}>Origen: </Text>
+                      {openOffer.pickupAddress || `${Number(openOffer.pickupLat).toFixed(4)}, ${Number(openOffer.pickupLng).toFixed(4)}`}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#F44336" }} />
+                    <Text style={{ color: "#fff", fontSize: 13, flex: 1 }} numberOfLines={1}>
+                      <Text style={{ color: colors.mutedText, fontWeight: "bold" }}>Destino: </Text>
+                      {openOffer.dropoffAddress || `${Number(openOffer.dropoffLat).toFixed(4)}, ${Number(openOffer.dropoffLng).toFixed(4)}`}
+                    </Text>
+                  </View>
+                </View>
+
+                {onCancelOffer ? (
+                  <Pressable
+                    style={styles.cancelBtn}
+                    onPress={onCancelOffer}
+                    disabled={rideActionLoading}
+                  >
+                    <Text style={styles.cancelBtnText}>{rideActionLoading ? "Cancelando..." : "Cancelar contraoferta"}</Text>
+                  </Pressable>
+                ) : null}
+              </View>
             ) : null}
           </View>
         ) : null}
@@ -280,9 +329,9 @@ export function PassengerHomeView({
 
           <View style={styles.servicesGrid}>
             <Pressable
-              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide || userHasOpenOffer) && styles.disabledBtn]}
+              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide) && styles.disabledBtn]}
               onPress={() => onNavigateMakeOffer("TRASLADO")}
-              disabled={userHasActiveRide || userHasOpenOffer}
+              disabled={userHasActiveRide}
             >
               <View style={[styles.serviceIconWrap, { backgroundColor: colors.neonGlow }]}>
                 <Ionicons name="car" size={28} color={colors.neon} />
@@ -295,9 +344,9 @@ export function PassengerHomeView({
             </Pressable>
 
             <Pressable
-              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide || userHasOpenOffer) && styles.disabledBtn]}
+              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide) && styles.disabledBtn]}
               onPress={() => onNavigateMakeOffer("DELIVERY")}
-              disabled={userHasActiveRide || userHasOpenOffer}
+              disabled={userHasActiveRide}
             >
               <View style={[styles.serviceIconWrap, { backgroundColor: "rgba(255,152,0,0.15)" }]}>
                 <Ionicons name="cube" size={28} color="#FF9800" />
@@ -310,9 +359,9 @@ export function PassengerHomeView({
             </Pressable>
 
             <Pressable
-              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide || userHasOpenOffer) && styles.disabledBtn]}
+              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide) && styles.disabledBtn]}
               onPress={() => onNavigateMakeOffer("ENVIO")}
-              disabled={userHasActiveRide || userHasOpenOffer}
+              disabled={userHasActiveRide}
             >
               <View style={[styles.serviceIconWrap, { backgroundColor: "rgba(76,175,80,0.15)" }]}>
                 <Ionicons name="mail" size={28} color="#4CAF50" />
@@ -325,9 +374,9 @@ export function PassengerHomeView({
             </Pressable>
 
             <Pressable
-              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide || userHasOpenOffer) && styles.disabledBtn, { marginTop: 16 }]}
+              style={({ pressed }) => [styles.serviceBtn, pressed && styles.pressed, (userHasActiveRide) && styles.disabledBtn, { marginTop: 16 }]}
               onPress={onNavigateOfferLibre}
-              disabled={userHasActiveRide || userHasOpenOffer}
+              disabled={userHasActiveRide}
             >
               <View style={[styles.serviceIconWrap, { backgroundColor: "rgba(255,152,0,0.15)" }]}>
                 <Ionicons name="cash" size={28} color="#FF9800" />

@@ -1316,6 +1316,7 @@ export function HomeScreen({ navigation }: Props) {
     return (
       <PassengerHomeView
         attentionRide={attentionRide}
+        openOffer={openOffer}
         rideLoading={rideLoading}
         rideError={rideError}
         userHasActiveRide={userHasActiveRide}
@@ -1332,6 +1333,7 @@ export function HomeScreen({ navigation }: Props) {
         onNavigateChat={(rideId) => navigation.navigate("Chat", { rideId })}
         onCallDriverDirect={() => void callDriverDirect()}
         onCancelRide={confirmCancelMyRide}
+        onCancelOffer={cancelMyOffer}
         onOpenProfile={() => navigation.navigate("Profile")}
         onOpenSupport={openOperator}
         onSubmitRating={submitRating}

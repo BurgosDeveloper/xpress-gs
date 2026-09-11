@@ -64,10 +64,20 @@ export function registerSocketHandlers(io: Server, socket: Socket, userId: strin
       const driver = await prisma.driverProfile.findUnique({ where: { userId } });
       if (!driver) throw new Error('Driver not found');
 
-      const candidate = await prisma.rideCandidate.create({
-        data: {
+      const candidate = await prisma.rideCandidate.upsert({
+        where: {
+          rideId_driverId: {
+            rideId: data.rideId,
+            driverId: driver.id,
+          },
+        },
+        create: {
           rideId: data.rideId,
           driverId: driver.id,
+          status: 'OFFERED',
+          amount: data.amount,
+        } as any,
+        update: {
           status: 'OFFERED',
           amount: data.amount,
         } as any,
@@ -75,9 +85,13 @@ export function registerSocketHandlers(io: Server, socket: Socket, userId: strin
       });
 
       // Emitimos al creador del ride que llegó una nueva oferta/candidato
-      const ride = await prisma.rideRequest.findUnique({ where: { id: data.rideId } });
-      if (ride) {
-        io.to(`user:${ride.passengerId}`).emit('ride:new_offer', candidate);
+      const ride = await prisma.rideRequest.findUnique({
+        where: { id: data.rideId },
+        include: { passenger: { select: { userId: true } } },
+      });
+      if (ride?.passenger?.userId) {
+        io.to(`user:${ride.passenger.userId}`).emit('ride:new_offer', candidate);
+        io.to(`user:${ride.passenger.userId}`).emit('ride:offers:changed', { rideId: data.rideId });
       }
 
     } catch (error) {
