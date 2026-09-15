@@ -516,7 +516,7 @@ export function HomeScreen({ navigation }: Props) {
     setOfferRideLoadingId(rideId);
     setNearbyRequestsError(null);
     try {
-      await apiDriverOfferRide(token, { rideId });
+      await apiDriverOfferRide(token, { rideId, coords: driverCoords ?? undefined });
       await refreshNearbyRequests({ showLoading: false });
     } catch (e) {
       setNearbyRequestsError(e instanceof Error ? e.message : "No se pudo ofrecer el servicio");

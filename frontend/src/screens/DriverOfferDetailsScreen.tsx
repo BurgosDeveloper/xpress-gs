@@ -210,14 +210,22 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
     setError(null);
 
     try {
+      const ok = await ensureForegroundPermission();
+      let coords: { lat: number; lng: number } | null = null;
+      if (ok) {
+        coords = (await getLastKnownCoords()) || (await getCurrentCoords());
+      }
+
       if (isOfferEntity) {
-        const ok = await ensureForegroundPermission();
-        if (!ok) throw new Error("Necesitás habilitar la ubicación para aceptar la oferta");
-        const coords = (await getLastKnownCoords()) || (await getCurrentCoords());
+        if (!coords) throw new Error("Necesitás habilitar la ubicación para aceptar la oferta");
         await apiCommitOffer(token, offerId, { lat: coords.lat, lng: coords.lng });
         Alert.alert("¡Oferta aceptada!", "Te comprometiste con la contraoferta del cliente.");
       } else {
-        await apiDriverOfferRide(token, { rideId: offerId, amount: Number(offer?.estimatedPrice || 0) });
+        await apiDriverOfferRide(token, {
+          rideId: offerId,
+          amount: Number(offer?.estimatedPrice || 0),
+          coords: coords ? { lat: coords.lat, lng: coords.lng } : undefined,
+        });
         Alert.alert("¡Postulación enviada!", "Te postulaste correctamente. El cliente evaluará a los ejecutivos postulados.");
       }
       navigation.goBack();

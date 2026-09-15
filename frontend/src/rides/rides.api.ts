@@ -157,12 +157,12 @@ export function apiDriverNearbyRideRequests(token: string, input?: { radiusM?: n
   });
 }
 
-export function apiDriverOfferRide(token: string, input: { rideId: string; amount?: number }) {
+export function apiDriverOfferRide(token: string, input: { rideId: string; amount?: number; coords?: { lat: number; lng: number } }) {
   return apiRequest<{ ok: true; candidate: any }>({
     method: "POST",
     path: `/rides/${input.rideId}/offer`,
     token,
-    body: { amount: input.amount },
+    body: { amount: input.amount, coords: input.coords },
   });
 }
 

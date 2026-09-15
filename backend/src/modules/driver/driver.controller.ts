@@ -138,7 +138,9 @@ export async function driverStartRideController(req: Request, res: Response) {
   });
   if (!ride) return res.status(404).json({ message: "Ride not found" });
   if (ride.matchedDriverId !== driver.id) return res.status(403).json({ message: "Forbidden" });
-  if (ride.status !== "ACCEPTED") return res.status(400).json({ message: "Ride not in ACCEPTED" });
+  if (!["ACCEPTED", "ASSIGNED", "MATCHED"].includes(ride.status)) {
+    return res.status(400).json({ message: "Ride not in valid state to start" });
+  }
 
   const updated = await prisma.rideRequest.update({
     where: { id: ride.id },
@@ -262,8 +264,8 @@ export async function driverNotifyArrivedController(req: Request, res: Response)
   if (ride.matchedDriverId !== driver.id) return res.status(403).json({ message: "Forbidden" });
 
   // Notificar llegada es previo a iniciar.
-  if (ride.status !== "ACCEPTED") {
-    return res.status(400).json({ message: "Ride not in ACCEPTED" });
+  if (!["ACCEPTED", "ASSIGNED", "MATCHED"].includes(ride.status)) {
+    return res.status(400).json({ message: "Ride not in valid state for arrival" });
   }
 
   const now = new Date();
@@ -276,31 +278,16 @@ export async function driverNotifyArrivedController(req: Request, res: Response)
 
   emitToUser(ride.passenger.userId, "ride:changed", { rideId: ride.id, type: "DRIVER_ARRIVED", eventId });
 
-  const first = await sendPushToUser({
+  // Push al cliente en segundo plano (fire-and-forget: nunca bloquea si el cliente no tiene token en iOS/Android)
+  void sendPushToUser({
     userId: ride.passenger.userId,
     title: "Tu ejecutivo está en el lugar",
     body: "Tu ejecutivo ya llegó al punto de recogida.",
     soundName: "uber_llego",
     data: { rideId: ride.id, type: "DRIVER_ARRIVED", eventId },
-  });
+  }).catch(() => null);
 
-  // Si no hay FCM en producción, mejor avisar explícitamente.
-  if (!first.ok && first.reason === "FCM_NOT_CONFIGURED") {
-    return res.status(503).json({
-      ok: false,
-      message: "Notificaciones no configuradas en el servidor (FCM).",
-    });
-  }
-
-  // Si el pasajero no tiene tokens registrados, no se puede notificar.
-  if (first.ok && first.sent === 0) {
-    return res.status(409).json({
-      ok: false,
-      message: "El cliente no tiene notificaciones activas (sin token registrado).",
-    });
-  }
-
-  return res.status(200).json({ ok: true, push: first });
+  return res.status(200).json({ ok: true });
 }
 
 export async function driverCompleteRideController(req: Request, res: Response) {

@@ -767,7 +767,12 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
   return { ok: true as const, center, radiusM: params.radiusM, items };
 }
 
-export async function offerRideForDriver(params: { userId: string; rideId: string; amount?: number }) {
+export async function offerRideForDriver(params: {
+  userId: string;
+  rideId: string;
+  amount?: number;
+  coords?: { lat: number; lng: number };
+}) {
   const driver = await prisma.driverProfile.findUnique({
     where: { userId: params.userId },
     include: { location: true, user: { select: { isActive: true } } },
@@ -778,11 +783,20 @@ export async function offerRideForDriver(params: { userId: string; rideId: strin
   const credits = await ensureDriverHasMinCredits({ userId: params.userId });
   if (!credits.ok) return { ok: false as const, status: credits.status, error: credits.error };
 
-  if (!driver.isAvailable) return { ok: false as const, status: 400 as const, error: "Driver not available" };
-  if (!driver.location) return { ok: false as const, status: 400 as const, error: "Driver location missing" };
-  if (driver.location.updatedAt < driverLocationFreshSince()) {
-    return { ok: false as const, status: 400 as const, error: "Driver offline" };
+  // Si nos pasan coords frescas desde el teléfono, las guardamos y marcamos disponible
+  if (params.coords) {
+    await prisma.$transaction([
+      prisma.driverLocation.upsert({
+        where: { driverId: driver.id },
+        create: { driverId: driver.id, lat: params.coords.lat, lng: params.coords.lng },
+        update: { lat: params.coords.lat, lng: params.coords.lng },
+      }),
+      prisma.driverProfile.update({ where: { id: driver.id }, data: { isAvailable: true } }),
+    ]);
   }
+
+  if (!params.coords && !driver.isAvailable) return { ok: false as const, status: 400 as const, error: "Driver not available" };
+  if (!params.coords && !driver.location) return { ok: false as const, status: 400 as const, error: "Driver location missing" };
 
   // Evitar que un chofer con servicio activo siga ofreciendo.
   const activeRide = await prisma.rideRequest.findFirst({
@@ -814,8 +828,12 @@ export async function offerRideForDriver(params: { userId: string; rideId: strin
     return { ok: false as const, status: 400 as const, error: "Ride service type mismatch" };
   }
 
+  const driverCoords = params.coords
+    ? { lat: params.coords.lat, lng: params.coords.lng }
+    : { lat: Number(driver.location!.lat), lng: Number(driver.location!.lng) };
+
   const dist = haversineDistanceMeters(
-    { lat: Number(driver.location.lat), lng: Number(driver.location.lng) },
+    driverCoords,
     { lat: Number(ride.pickupLat), lng: Number(ride.pickupLng) }
   );
   const maxRadius = Math.max(ride.searchRadiusM || 2000, 50000);
@@ -1000,7 +1018,6 @@ export async function selectDriver(params: { userId: string; rideId: string; dri
 
   if (!driver.isAvailable) return { ok: false as const, error: "Driver not available" };
   if (!driver.location) return { ok: false as const, error: "Driver location missing" };
-  if (driver.location.updatedAt < driverLocationFreshSince()) return { ok: false as const, error: "Driver offline" };
 
   // Si el chofer ya tiene un servicio activo, no puede ser seleccionado en otro.
   const driverActiveRide = await prisma.rideRequest.findFirst({

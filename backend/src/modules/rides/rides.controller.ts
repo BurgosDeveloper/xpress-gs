@@ -199,7 +199,12 @@ export async function driverOfferRideController(req: Request, res: Response) {
   const parsed = RideOfferParamsSchema.parse({ rideId });
   const body = OfferRideBodySchema.parse(req.body);
 
-  const result = await offerRideForDriver({ userId, rideId: parsed.rideId, amount: body.amount });
+  const result = await offerRideForDriver({
+    userId,
+    rideId: parsed.rideId,
+    amount: body.amount,
+    coords: body.coords,
+  });
   if (!result.ok) return res.status(result.status).json({ message: result.error });
   return res.status(200).json(result);
 }

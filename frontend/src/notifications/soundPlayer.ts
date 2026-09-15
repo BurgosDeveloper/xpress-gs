@@ -18,7 +18,7 @@ async function ensureAudioMode() {
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
+      staysActiveInBackground: Platform.OS === "android",
       shouldDuckAndroid: true,
       playThroughEarpieceAndroid: false,
     });

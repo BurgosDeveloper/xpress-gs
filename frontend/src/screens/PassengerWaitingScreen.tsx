@@ -48,6 +48,17 @@ export function PassengerWaitingScreen({ route, navigation }: Props) {
     try {
       const res = await apiGetRideById(token, { rideId });
 
+      const currentStatus = res.ride?.status;
+      if (currentStatus === "IN_PROGRESS" || currentStatus === "COMPLETED") {
+        navigation.popToTop();
+        return;
+      }
+      if (currentStatus === "CANCELLED") {
+        Alert.alert("Servicio cancelado", "El servicio fue cancelado.");
+        navigation.popToTop();
+        return;
+      }
+
       if (res.ride?.matchedDriver?.id) {
         matchedDriverIdRef.current = String(res.ride.matchedDriver.id);
       }
@@ -165,6 +176,10 @@ export function PassengerWaitingScreen({ route, navigation }: Props) {
     const payloadRideId = payload?.rideId != null ? String(payload.rideId) : "";
     if (payloadRideId && payloadRideId !== rideId) return;
     void handleRideChangedForegroundRealtime({ role: "USER", payload });
+    if (payload?.type === "RIDE_STARTED" || payload?.type === "RIDE_COMPLETED") {
+      navigation.popToTop();
+      return;
+    }
     void refresh();
   };
 
