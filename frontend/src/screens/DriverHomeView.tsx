@@ -59,7 +59,7 @@ export function DriverHomeView({
 }: DriverHomeViewProps) {
   const auth = useAuth();
   const insets = useSafeAreaInsets();
-  const displayName = auth.user?.username || auth.user?.email?.split("@")[0] || "Ejecutivo";
+  const displayName = auth.user?.driver?.fullName || auth.user?.username || auth.user?.email?.split("@")[0] || "Ejecutivo";
   const [liveNavVisible, setLiveNavVisible] = useState(false);
   const activeRideId = attentionRide?.id != null ? String(attentionRide.id) : null;
   const unreadCount = useUnreadChatCount(activeRideId);
@@ -373,10 +373,10 @@ export function DriverHomeView({
               style={{ width: 34, height: 34, marginRight: 4 }}
               resizeMode="contain"
             />
-            <View>
-              <Text style={styles.greeting}>¡Hola, {displayName}!</Text>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.greeting} numberOfLines={1} ellipsizeMode="tail">¡Hola, {displayName}!</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Text style={styles.statusText}>Conectado y disponible</Text>
+                <Text style={styles.statusText} numberOfLines={1} ellipsizeMode="tail">Conectado y disponible</Text>
                 <View style={styles.statusDot} />
               </View>
             </View>
@@ -528,14 +528,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginRight: 10,
+    minWidth: 0,
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    flexShrink: 0,
   },
   profileBtn: {
     width: 40,

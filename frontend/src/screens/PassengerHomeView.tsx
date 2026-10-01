@@ -122,7 +122,7 @@ export function PassengerHomeView({
                       <Ionicons name="person" size={20} color="#fff" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.driverName}>{attentionRide.matchedDriver.fullName}</Text>
+                      <Text style={styles.driverName} numberOfLines={1} ellipsizeMode="tail">{attentionRide.matchedDriver.fullName}</Text>
                       {attentionRide.matchedDriver.vehicle ? (
                         <Text style={styles.driverVehicle}>
                           {attentionRide.matchedDriver.vehicle.brand} {attentionRide.matchedDriver.vehicle.model} • {attentionRide.matchedDriver.vehicle.plate}

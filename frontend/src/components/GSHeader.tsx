@@ -29,10 +29,12 @@ export function GSHeader({
           style={{ width: 34, height: 34, marginRight: 4 }}
           resizeMode="contain"
         />
-        <View>
-          <Text style={styles.greeting}>¡Hola, {displayName}!</Text>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.greeting} numberOfLines={1} ellipsizeMode="tail">
+            ¡Hola, {displayName}!
+          </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Text style={styles.statusText}>{statusText}</Text>
+            <Text style={styles.statusText} numberOfLines={1} ellipsizeMode="tail">{statusText}</Text>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
           </View>
         </View>
@@ -65,9 +67,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   headerLeft: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    marginRight: 10,
+    minWidth: 0,
   },
   greeting: {
     color: "#fff",
@@ -87,6 +92,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    flexShrink: 0,
   },
   notifBtn: {
     width: 40,
