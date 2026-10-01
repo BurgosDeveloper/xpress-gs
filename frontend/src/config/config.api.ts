@@ -1,5 +1,16 @@
 import { apiRequest } from "../lib/api";
 
+export type AppVersionInfo = {
+  latestVersion: string;
+  minAndroidBuildNumber: number;
+  minIosBuildNumber: number;
+  forceUpdate: boolean;
+  updateTitle: string;
+  updateMessage: string;
+  playStoreUrl: string;
+  appStoreUrl: string;
+};
+
 export type PublicAppConfig = {
   id: string;
   fxCopPerUsd: number;
@@ -16,6 +27,8 @@ export type PublicAppConfig = {
   paymentZelleHolder: string;
   paymentZelleEmail: string;
   paymentZellePhone: string;
+
+  versionInfo?: AppVersionInfo;
 };
 
 export type PublicZone = {

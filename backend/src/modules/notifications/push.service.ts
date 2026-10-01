@@ -1,1 +1,2 @@
-export { sendPushToUser, sendPushToUserBurst } from "./notifications.service";
+export { sendPushToUser, sendPushToUserBurst, sendPushBroadcast } from "./notifications.service";
+

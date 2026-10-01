@@ -76,6 +76,20 @@ const EnvSchema = z.object({
 
   // Taxímetro / tarifa: cantidad de KM incluidos en el precio base
   METER_INCLUDED_KM: z.coerce.number().int().nonnegative().default(3),
+
+  // Control de versiones y actualización desde el servidor
+  LATEST_APP_VERSION: z.string().default("1.0.36"),
+  MIN_ANDROID_BUILD_NUMBER: z.coerce.number().int().default(42),
+  MIN_IOS_BUILD_NUMBER: z.coerce.number().int().default(42),
+  FORCE_APP_UPDATE: z.preprocess(booleanStringToOptional, z.boolean().optional()).default(true),
+  APP_UPDATE_TITLE: z.string().default("¡Actualización requerida!"),
+  APP_UPDATE_MESSAGE: z
+    .string()
+    .default(
+      "Existe una versión más reciente de Xpress Traslados con mejoras de estabilidad y conexión. Por favor actualiza la app para continuar."
+    ),
+  PLAY_STORE_URL: z.string().default("https://play.google.com/store/apps/details?id=com.xpress.sc"),
+  APP_STORE_URL: z.string().default("https://apps.apple.com/app/id6744026367"),
 });
 
 export const env = EnvSchema.parse(process.env);

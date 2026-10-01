@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { getAppConfig, normalizeMatchingRadiusM } from "./appConfig.service";
 import { prisma } from "../../db/prisma";
+import { env } from "../../utils/env";
 
 export async function getPublicAppConfigController(_req: Request, res: Response) {
   const cfg = await getAppConfig();
@@ -31,6 +32,17 @@ export async function getPublicAppConfigController(_req: Request, res: Response)
       paymentZelleHolder: text((cfg as any).paymentZelleHolder),
       paymentZelleEmail: text((cfg as any).paymentZelleEmail),
       paymentZellePhone: text((cfg as any).paymentZellePhone),
+
+      versionInfo: {
+        latestVersion: env.LATEST_APP_VERSION,
+        minAndroidBuildNumber: env.MIN_ANDROID_BUILD_NUMBER,
+        minIosBuildNumber: env.MIN_IOS_BUILD_NUMBER,
+        forceUpdate: env.FORCE_APP_UPDATE,
+        updateTitle: env.APP_UPDATE_TITLE,
+        updateMessage: env.APP_UPDATE_MESSAGE,
+        playStoreUrl: env.PLAY_STORE_URL,
+        appStoreUrl: env.APP_STORE_URL,
+      },
     },
   });
 }

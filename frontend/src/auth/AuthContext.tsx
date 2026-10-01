@@ -284,7 +284,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
         }
       }
       await clearToken();
-      setState({ bootstrapped: true, token: null, user: null, appConfig: null });
+      setState((prev) => ({ bootstrapped: true, token: null, user: null, appConfig: prev.appConfig }));
     }
 
     return {

@@ -211,3 +211,91 @@ export async function sendPushToAdmins(params: {
   const failed = results.reduce((acc, r) => (r.ok ? acc + r.failed : acc), 0);
   return { ok: true as const, sent, failed };
 }
+
+export async function sendPushBroadcast(params: {
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+  soundName?: string;
+}) {
+  const tokens = await prisma.pushToken.findMany();
+  if (tokens.length === 0) return { ok: true as const, sent: 0, failed: 0 };
+
+  const soundName = params.soundName?.trim() ? params.soundName.trim() : undefined;
+  const eventId = makeEventId();
+
+  function androidChannelIdForSound(sName: string | undefined) {
+    if (sName && sName.trim()) return `xpress_sound_${sName.trim()}_v3`;
+    return "xpress_silent_v3";
+  }
+
+  const baseData: Record<string, string> = {
+    ...(params.data ?? {}),
+    eventId,
+    ...(soundName ? { soundName } : null),
+  };
+
+  const androidTokens = tokens
+    .filter((t) => t.platform === "ANDROID")
+    .map((t) => normalizePushToken(t.token, "ANDROID"))
+    .filter(Boolean);
+  const iosTokens = tokens
+    .filter((t) => t.platform === "IOS")
+    .map((t) => normalizePushToken(t.token, "IOS"))
+    .filter(Boolean);
+
+  let sent = 0;
+  let failed = 0;
+
+  if (androidTokens.length > 0) {
+    const messaging = getFCMOrNull();
+    if (messaging) {
+      const androidData: Record<string, string> = { ...baseData };
+      const channelId = androidChannelIdForSound(soundName);
+      const batchSize = 450;
+      for (let i = 0; i < androidTokens.length; i += batchSize) {
+        const batch = androidTokens.slice(i, i + batchSize);
+        try {
+          const resAndroid = await messaging.sendEachForMulticast({
+            tokens: batch,
+            notification: { title: params.title, body: params.body },
+            data: androidData,
+            android: {
+              priority: "high",
+              notification: { channelId },
+            },
+          });
+          sent += resAndroid.successCount;
+          failed += resAndroid.failureCount;
+        } catch (err) {
+          console.error("[push] error sending broadcast FCM batch:", err);
+          failed += batch.length;
+        }
+      }
+    }
+  }
+
+  if (iosTokens.length > 0) {
+    const batchSize = 450;
+    for (let i = 0; i < iosTokens.length; i += batchSize) {
+      const batch = iosTokens.slice(i, i + batchSize);
+      try {
+        const resIos = await sendAPNsMulticast({
+          tokens: batch,
+          title: params.title,
+          body: params.body,
+          data: baseData,
+          soundName,
+        });
+        sent += resIos.successCount;
+        failed += resIos.failureCount;
+      } catch (err) {
+        console.error("[push] error sending broadcast APNs batch:", err);
+        failed += batch.length;
+      }
+    }
+  }
+
+  return { ok: true as const, sent, failed };
+}
+
