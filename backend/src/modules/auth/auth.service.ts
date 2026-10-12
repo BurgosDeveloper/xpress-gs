@@ -97,6 +97,31 @@ export async function loginUser(input: { user: string; password: string }) {
   }
 
   const token = signAccessToken({ sub: user.id, role: user.role });
+  
+  let driverData = user.driver as any;
+  if (driverData) {
+    const [ratingAgg, completedCount, activeCount] = await Promise.all([
+      prisma.rating.aggregate({
+        _avg: { stars: true },
+        _count: { stars: true },
+        where: { toUserId: user.id, direction: "PASSENGER_TO_DRIVER" },
+      }),
+      prisma.rideRequest.count({
+        where: { matchedDriverId: driverData.id, status: "COMPLETED" },
+      }),
+      prisma.driverProfile.count({
+        where: { isAvailable: true, user: { isActive: true } },
+      }),
+    ]);
+    driverData = {
+      ...driverData,
+      avgRating: ratingAgg._avg.stars != null ? Number(ratingAgg._avg.stars.toFixed(1)) : 5.0,
+      ratingsCount: ratingAgg._count.stars,
+      completedRidesCount: completedCount,
+      activeDriversCount: activeCount,
+    };
+  }
+
   return {
     ok: true as const,
     user: {
@@ -106,7 +131,7 @@ export async function loginUser(input: { user: string; password: string }) {
       role: user.role,
       isActive: user.isActive,
       passenger: user.passenger,
-      driver: user.driver,
+      driver: driverData,
     },
     token,
   };
@@ -115,9 +140,34 @@ export async function loginUser(input: { user: string; password: string }) {
 export async function getMe(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { passenger: true, driver: { include: { vehicle: true, documents: true } } },
+    include: { passenger: true, driver: { include: { vehicle: true, documents: true, location: true } } },
   });
   if (!user) return null;
+
+  let driverData = user.driver as any;
+  if (driverData) {
+    const [ratingAgg, completedCount, activeCount] = await Promise.all([
+      prisma.rating.aggregate({
+        _avg: { stars: true },
+        _count: { stars: true },
+        where: { toUserId: user.id, direction: "PASSENGER_TO_DRIVER" },
+      }),
+      prisma.rideRequest.count({
+        where: { matchedDriverId: driverData.id, status: "COMPLETED" },
+      }),
+      prisma.driverProfile.count({
+        where: { isAvailable: true, user: { isActive: true } },
+      }),
+    ]);
+    driverData = {
+      ...driverData,
+      avgRating: ratingAgg._avg.stars != null ? Number(ratingAgg._avg.stars.toFixed(1)) : 5.0,
+      ratingsCount: ratingAgg._count.stars,
+      completedRidesCount: completedCount,
+      activeDriversCount: activeCount,
+    };
+  }
+
   return {
     id: user.id,
     username: user.username,
@@ -125,6 +175,6 @@ export async function getMe(userId: string) {
     role: user.role,
     isActive: user.isActive,
     passenger: user.passenger,
-    driver: user.driver,
+    driver: driverData,
   };
 }

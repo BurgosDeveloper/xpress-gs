@@ -488,3 +488,11 @@ export function apiAdminUpsertZoneFixedPrice(
     body: input,
   });
 }
+
+export function apiAdminGetLiveFleet(token: string) {
+  return apiRequest<{ ok: true; drivers: any[]; pendingRides: any[] }>({
+    method: "GET",
+    path: "/admin/fleet/live",
+    token,
+  });
+}

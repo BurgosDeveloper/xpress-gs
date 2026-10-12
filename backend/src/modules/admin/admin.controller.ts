@@ -31,6 +31,7 @@ import {
   createDriverByAdmin,
   createPricingAddon,
   deactivatePricingAddon,
+  getLiveFleet,
   getMetrics,
   getPricing,
   listDrivers,
@@ -96,6 +97,11 @@ export async function adminCreateDriverController(req: Request, res: Response) {
 export async function adminListDriversController(req: Request, res: Response) {
   const rows = await listDrivers();
   return res.status(200).json({ ok: true, drivers: rows });
+}
+
+export async function adminGetLiveFleetController(_req: Request, res: Response) {
+  const data = await getLiveFleet();
+  return res.status(200).json({ ok: true, ...data });
 }
 
 export async function adminApproveDriverController(req: Request, res: Response) {

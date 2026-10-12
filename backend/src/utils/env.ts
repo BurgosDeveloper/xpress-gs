@@ -78,9 +78,9 @@ const EnvSchema = z.object({
   METER_INCLUDED_KM: z.coerce.number().int().nonnegative().default(3),
 
   // Control de versiones y actualización desde el servidor
-  LATEST_APP_VERSION: z.string().default("1.0.36"),
-  MIN_ANDROID_BUILD_NUMBER: z.coerce.number().int().default(42),
-  MIN_IOS_BUILD_NUMBER: z.coerce.number().int().default(42),
+  LATEST_APP_VERSION: z.string().default("1.0.37"),
+  MIN_ANDROID_BUILD_NUMBER: z.coerce.number().int().default(43),
+  MIN_IOS_BUILD_NUMBER: z.coerce.number().int().default(43),
   FORCE_APP_UPDATE: z.preprocess(booleanStringToOptional, z.boolean().optional()).default(true),
   APP_UPDATE_TITLE: z.string().default("¡Actualización requerida!"),
   APP_UPDATE_MESSAGE: z

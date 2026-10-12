@@ -17,6 +17,7 @@ import {
   adminGetMetricsController,
   adminListAddonsController,
   adminListDriversController,
+  adminGetLiveFleetController,
   adminListPassengersController,
   adminSetPassengerActiveController,
   adminUpdatePassengerController,
@@ -44,6 +45,7 @@ adminRouter.patch("/drivers/:driverId", adminUpdateDriverController);
 adminRouter.patch("/drivers/:driverId/active", adminSetDriverActiveController);
 adminRouter.get("/drivers/:driverId/credits", adminGetDriverCreditsController);
 adminRouter.patch("/drivers/:driverId/credits", adminAdjustDriverCreditsController);
+adminRouter.get("/fleet/live", adminGetLiveFleetController);
 
 adminRouter.get("/passengers", adminListPassengersController);
 adminRouter.patch("/passengers/:passengerId", adminUpdatePassengerController);

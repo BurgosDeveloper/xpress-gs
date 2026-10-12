@@ -108,7 +108,7 @@ export async function createDriverByAdmin(input: {
 }
 
 export async function listDrivers() {
-  return prisma.driverProfile.findMany({
+  const drivers = await prisma.driverProfile.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -133,6 +133,97 @@ export async function listDrivers() {
       location: true,
     },
   });
+
+  if (drivers.length === 0) return [];
+
+  const userIds = drivers.map((d) => d.userId);
+  const driverIds = drivers.map((d) => d.id);
+
+  const [ratingsByToUser, completedCounts] = await Promise.all([
+    prisma.rating.groupBy({
+      by: ["toUserId"],
+      _avg: { stars: true },
+      _count: { stars: true },
+      where: {
+        toUserId: { in: userIds },
+        direction: "PASSENGER_TO_DRIVER",
+      },
+    }),
+    prisma.rideRequest.groupBy({
+      by: ["matchedDriverId"],
+      _count: { id: true },
+      where: {
+        matchedDriverId: { in: driverIds },
+        status: "COMPLETED",
+      },
+    }),
+  ]);
+
+  const ratingMap = new Map<string, { avg: number; count: number }>();
+  for (const r of ratingsByToUser) {
+    ratingMap.set(r.toUserId, {
+      avg: r._avg.stars != null ? Number(r._avg.stars.toFixed(1)) : 5.0,
+      count: r._count.stars,
+    });
+  }
+
+  const completedMap = new Map<string, number>();
+  for (const c of completedCounts) {
+    if (c.matchedDriverId) {
+      completedMap.set(c.matchedDriverId, c._count.id);
+    }
+  }
+
+  return drivers.map((d) => {
+    const r = ratingMap.get(d.userId);
+    return {
+      ...d,
+      avgRating: r?.avg ?? 5.0,
+      ratingsCount: r?.count ?? 0,
+      completedRidesCount: completedMap.get(d.id) ?? 0,
+    };
+  });
+}
+
+export async function getLiveFleet() {
+  const [drivers, pendingRides] = await Promise.all([
+    listDrivers(),
+    prisma.rideRequest.findMany({
+      where: {
+        status: "OPEN",
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: {
+        id: true,
+        status: true,
+        serviceTypeWanted: true,
+        pickupLat: true,
+        pickupLng: true,
+        pickupAddress: true,
+        dropoffLat: true,
+        dropoffLng: true,
+        dropoffAddress: true,
+        distanceMeters: true,
+        estimatedPrice: true,
+        agreedPrice: true,
+        createdAt: true,
+        passenger: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            photoUrl: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    drivers,
+    pendingRides,
+  };
 }
 
 export async function adminHardDeleteDriver(params: { driverId: string }) {

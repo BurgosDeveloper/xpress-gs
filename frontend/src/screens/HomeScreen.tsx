@@ -1291,15 +1291,19 @@ export function HomeScreen({ navigation }: Props) {
         <DriverHomeView
           attentionRide={attentionRide}
           nearbyRequests={nearbyRequests}
-          completedRides={completedRidesCount}
+          completedRides={auth.user?.driver?.completedRidesCount ?? completedRidesCount}
           rating={auth.user?.driver?.avgRating != null ? Number(auth.user.driver.avgRating) : driverRating}
+          activeDriversCount={auth.user?.driver?.activeDriversCount}
           earnings={driverEarnings}
           balance={driverBalance}
           onNavigateOfferDetails={(rideId) => navigation.navigate("DriverOfferDetails", { offerId: rideId })}
           onRefresh={() => refreshNearbyRequests({ showLoading: true })}
           onOpenHistory={() => navigation.navigate("RidesHistory")}
           onOpenBalance={() => navigation.navigate("Credits")}
-          onOpenAvailable={() => {}}
+          onOpenAvailable={() => {
+            const count = auth.user?.driver?.activeDriversCount ?? 1;
+            Alert.alert("Ejecutivos Conectados", `Hay ${count} ejecutivo(s) activo(s) y disponible(s) en la plataforma en tiempo real.`);
+          }}
           onOpenSupport={openOperator}
           onOpenProfile={() => navigation.navigate("Profile")}
           onDriverAction={driverAction}
@@ -1350,6 +1354,7 @@ export function HomeScreen({ navigation }: Props) {
         onNavigatePassengers={() => navigation.navigate("AdminPassengers")}
         onNavigateRides={() => navigation.navigate("AdminRides")}
         onNavigatePasswordResets={() => navigation.navigate("AdminPasswordResets")}
+        onNavigateLiveFleetMap={() => navigation.navigate("AdminLiveFleetMap")}
         onOpenProfile={() => navigation.navigate("Profile")}
         onLogout={() => void auth.logout()}
       />

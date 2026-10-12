@@ -26,6 +26,7 @@ import { AdminPassengerUpsertScreen } from "../screens/AdminPassengerUpsertScree
 import { AdminPasswordResetsScreen } from "../screens/AdminPasswordResetsScreen";
 import { AdminRidesScreen } from "../screens/AdminRidesScreen";
 import { AdminRideAssignMapScreen } from "../screens/AdminRideAssignMapScreen";
+import { AdminLiveFleetMapScreen } from "../screens/AdminLiveFleetMapScreen";
 import { AdminSettingsScreen } from "../screens/AdminSettingsScreen";
 import { AdminZonesScreen } from "../screens/AdminZonesScreen";
 import { CreditsScreen } from "../screens/CreditsScreen";
@@ -50,6 +51,7 @@ export type RootStackParamList = {
   AdminPassengerUpsert: { passenger?: any } | undefined;
   AdminRides: undefined;
   AdminRideAssignMap: { ride: any };
+  AdminLiveFleetMap: undefined;
   AdminPasswordResets: undefined;
   AdminSettings: undefined;
   Credits: undefined;
@@ -104,6 +106,7 @@ export function AppNavigator() {
             <Stack.Screen name="AdminPassengerUpsert" component={AdminPassengerUpsertScreen} options={{ title: "" }} />
             <Stack.Screen name="AdminRides" component={AdminRidesScreen} options={{ title: "" }} />
             <Stack.Screen name="AdminRideAssignMap" component={AdminRideAssignMapScreen} options={{ title: "" }} />
+            <Stack.Screen name="AdminLiveFleetMap" component={AdminLiveFleetMapScreen} options={{ title: "" }} />
             <Stack.Screen name="AdminPasswordResets" component={AdminPasswordResetsScreen} options={{ title: "" }} />
             <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ title: "" }} />
             <Stack.Screen name="AdminZones" component={AdminZonesScreen} options={{ title: "" }} />

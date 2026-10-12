@@ -16,6 +16,7 @@ type Props = {
   onNavigatePassengers: () => void;
   onNavigateRides: () => void;
   onNavigatePasswordResets: () => void;
+  onNavigateLiveFleetMap?: () => void;
   onOpenProfile: () => void;
   onLogout: () => void;
 };
@@ -27,6 +28,7 @@ export function AdminHomeView({
   onNavigatePassengers,
   onNavigateRides,
   onNavigatePasswordResets,
+  onNavigateLiveFleetMap,
   onOpenProfile,
   onLogout,
 }: Props) {
@@ -44,6 +46,26 @@ export function AdminHomeView({
           statusColor="#E91E63"
           onOpenProfile={onOpenProfile}
         />
+
+        {/* Hero Card: Mapa de Flota en Vivo */}
+        {onNavigateLiveFleetMap ? (
+          <Pressable
+            style={({ pressed }) => [styles.heroMapCard, pressed && styles.pressed]}
+            onPress={onNavigateLiveFleetMap}
+          >
+            <View style={styles.heroMapIconWrap}>
+              <Ionicons name="navigate-outline" size={26} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Text style={styles.heroMapTitle}>Mapa de Flota en Vivo</Text>
+                <View style={styles.heroLivePulse} />
+              </View>
+              <Text style={styles.heroMapSub}>Monitoreo en tiempo real y asignación de carreras</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.neon} />
+          </Pressable>
+        ) : null}
 
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
@@ -175,5 +197,50 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  }
+  },
+  heroMapCard: {
+    backgroundColor: "rgba(10, 13, 20, 0.95)",
+    borderWidth: 1.5,
+    borderColor: colors.neon,
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+    marginBottom: 8,
+    shadowColor: colors.neon,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  heroMapIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.neon,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: colors.neon,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  heroMapTitle: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  heroLivePulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#4CAF50",
+  },
+  heroMapSub: {
+    color: "#AAAAAA",
+    fontSize: 12,
+    marginTop: 2,
+  },
 });

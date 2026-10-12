@@ -7,7 +7,7 @@ import { chargeDriverCreditsForCompletedRide } from "../credits/credits.service"
 import { env } from "../../utils/env";
 import { calculateFare } from "../../utils/fare";
 import { effectiveBaseFare } from "../config/appConfig.service";
-import { emitToUser } from "../../realtime/realtime";
+import { emitToUser, getIOOrNull } from "../../realtime/realtime";
 
 function pricingServiceTypeFor(serviceTypeWanted: ServiceType): ServiceType {
   return serviceTypeWanted;
@@ -21,8 +21,33 @@ export async function driverGetMeController(req: Request, res: Response) {
     where: { id: userId },
     include: { driver: { include: { vehicle: true, documents: true, location: true } } },
   });
+  if (!me || !me.driver) {
+    return res.status(200).json({ ok: true, user: me && { id: me.id, email: me.email, role: me.role, driver: me.driver } });
+  }
 
-  return res.status(200).json({ ok: true, user: me && { id: me.id, email: me.email, role: me.role, driver: me.driver } });
+  const [ratingAgg, completedCount, activeCount] = await Promise.all([
+    prisma.rating.aggregate({
+      _avg: { stars: true },
+      _count: { stars: true },
+      where: { toUserId: me.id, direction: "PASSENGER_TO_DRIVER" },
+    }),
+    prisma.rideRequest.count({
+      where: { matchedDriverId: me.driver.id, status: "COMPLETED" },
+    }),
+    prisma.driverProfile.count({
+      where: { isAvailable: true, user: { isActive: true } },
+    }),
+  ]);
+
+  const driverWithStats = {
+    ...me.driver,
+    avgRating: ratingAgg._avg.stars != null ? Number(ratingAgg._avg.stars.toFixed(1)) : 5.0,
+    ratingsCount: ratingAgg._count.stars,
+    completedRidesCount: completedCount,
+    activeDriversCount: activeCount,
+  };
+
+  return res.status(200).json({ ok: true, user: { id: me.id, email: me.email, role: me.role, driver: driverWithStats } });
 }
 
 export async function driverSetAvailabilityController(req: Request, res: Response) {
@@ -35,6 +60,14 @@ export async function driverSetAvailabilityController(req: Request, res: Respons
     where: { userId },
     data: { isAvailable: input.isAvailable },
   });
+
+  // Emitir evento global de cambio de disponibilidad para mapas y contadores en vivo
+  try {
+    getIOOrNull()?.emit("driver_availability_update", {
+      driverId: updated.id,
+      isAvailable: updated.isAvailable,
+    });
+  } catch {}
 
   return res.status(200).json({ ok: true, driver: updated });
 }
@@ -59,6 +92,19 @@ export async function driverUpsertLocationController(req: Request, res: Response
       data: { isAvailable: true },
     }),
   ]);
+
+  // Emitir en tiempo real a administradores y pasajeros
+  try {
+    const io = getIOOrNull();
+    if (io) {
+      io.emit("driver_location_update", {
+        driverId: driver.id,
+        lat: input.lat,
+        lng: input.lng,
+      });
+      io.emit(`driver_location:${userId}`, { lat: input.lat, lng: input.lng });
+    }
+  } catch {}
 
   return res.status(200).json({ ok: true, location });
 }

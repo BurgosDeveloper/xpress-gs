@@ -97,11 +97,9 @@ function buildPayload(params: Omit<SendAPNsMulticastParams, "tokens">) {
       title: params.title,
       body: params.body,
     },
+    sound: params.soundName ? `${params.soundName}.mp3` : "default",
+    "content-available": 1,
   };
-
-  if (params.soundName) {
-    aps.sound = `${params.soundName}.mp3`;
-  }
 
   return {
     aps,

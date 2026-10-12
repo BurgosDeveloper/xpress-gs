@@ -35,7 +35,11 @@ export function AdminDriversScreen({ navigation }: Props) {
   const [techOpen, setTechOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState<DriverRow | null>(null);
 
-  const title = useMemo(() => `Ejecutivos (${drivers.length})`, [drivers.length]);
+  const activeCount = useMemo(
+    () => drivers.filter((d) => d.isAvailable && d.user?.isActive !== false).length,
+    [drivers]
+  );
+  const title = useMemo(() => `Ejecutivos (${activeCount} activos • ${drivers.length} total)`, [activeCount, drivers.length]);
 
   async function load() {
     if (!token) return;
@@ -187,6 +191,8 @@ export function AdminDriversScreen({ navigation }: Props) {
 
               <Text style={styles.line}>Teléfono: {d.phone || "—"}</Text>
               <Text style={styles.line}>Servicio: {d.serviceType ? serviceTypeLabel(d.serviceType) : "—"}</Text>
+              <Text style={styles.line}>Calificación: ⭐ {Number(d.avgRating ?? 5.0).toFixed(1)} ({d.ratingsCount ?? 0} opiniones)</Text>
+              <Text style={styles.line}>Viajes completados: {d.completedRidesCount ?? 0}</Text>
               <Text style={styles.line}>Estado: {d.status || "—"}</Text>
               <Text style={styles.line}>Disponible: {d.isAvailable ? "Sí" : "No"}</Text>
               <Text style={styles.line}>Activo: {d.user?.isActive ? "Sí" : "No"}</Text>

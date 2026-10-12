@@ -21,6 +21,7 @@ interface DriverHomeViewProps {
   nearbyRequests: any[];
   completedRides: number;
   rating: number;
+  activeDriversCount?: number;
   earnings: number;
   balance: number;
   onNavigateOfferDetails: (rideId: string) => void;
@@ -42,6 +43,7 @@ export function DriverHomeView({
   nearbyRequests,
   completedRides,
   rating,
+  activeDriversCount,
   earnings,
   balance,
   onNavigateOfferDetails,
@@ -472,7 +474,7 @@ export function DriverHomeView({
               <Text style={styles.actionTitle}>Ejecutivos disponibles</Text>
             </View>
             <View style={[styles.countBadge, { backgroundColor: "rgba(76,175,80,0.2)" }]}>
-              <Text style={[styles.countText, { color: "#4CAF50" }]}>24</Text>
+              <Text style={[styles.countText, { color: "#4CAF50" }]}>{activeDriversCount ?? 1}</Text>
             </View>
           </Pressable>
 
