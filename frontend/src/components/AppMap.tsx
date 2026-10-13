@@ -333,12 +333,22 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
       ) : null}
 
       {markerItems.map((m) => (
-        <MapboxGL.MarkerView
+        <MapboxGL.PointAnnotation
           key={m.id}
           id={m.id}
           coordinate={m.coordinate}
           anchor={m.anchor}
-          allowOverlap={true}
+          onSelected={() => {
+            lastMarkerTapAtRef.current = Date.now();
+            m.onPress?.();
+          }}
+          draggable={Boolean(m.draggable)}
+          onDragEnd={(payload) => {
+            const coords = (payload as any)?.geometry?.coordinates;
+            if (Array.isArray(coords) && coords.length >= 2) {
+              m.onDragEnd?.({ latitude: coords[1], longitude: coords[0] });
+            }
+          }}
         >
           <Pressable
             collapsable={false}
@@ -350,7 +360,7 @@ export const AppMap = forwardRef<AppMapRef, Props>(function AppMap(props, ref) {
           >
             {m.child}
           </Pressable>
-        </MapboxGL.MarkerView>
+        </MapboxGL.PointAnnotation>
       ))}
       </MapboxGL.MapView>
     </View>

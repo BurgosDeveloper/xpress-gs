@@ -746,16 +746,24 @@ export function HomeScreen({ navigation }: Props) {
         
         sub = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.Balanced,
-            distanceInterval: 50, // update every 50 meters
-            timeInterval: 15000, // or every 15 seconds
+            accuracy: Location.Accuracy.High,
+            distanceInterval: 10,
+            timeInterval: 5000,
           },
           (loc) => {
             if (cancelled) return;
             const lat = loc.coords.latitude;
             const lng = loc.coords.longitude;
             setDriverCoords({ lat, lng });
-            apiDriverUpsertLocation(token!, { lat, lng }).catch(() => {});
+            const heading =
+              typeof loc.coords.heading === "number" && loc.coords.heading >= 0
+                ? loc.coords.heading
+                : undefined;
+            const speed =
+              typeof loc.coords.speed === "number" && loc.coords.speed >= 0
+                ? loc.coords.speed
+                : undefined;
+            apiDriverUpsertLocation(token!, { lat, lng, heading, speed }).catch(() => {});
           }
         );
       } catch {

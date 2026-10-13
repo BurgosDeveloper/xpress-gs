@@ -1,6 +1,9 @@
 import { apiRequest } from "../lib/api";
 
-export function apiDriverUpsertLocation(token: string, coords: { lat: number; lng: number }) {
+export function apiDriverUpsertLocation(
+  token: string,
+  coords: { lat: number; lng: number; heading?: number; speed?: number }
+) {
   return apiRequest<{ ok: true; location: any }>({
     method: "PUT",
     path: "/driver/me/location",

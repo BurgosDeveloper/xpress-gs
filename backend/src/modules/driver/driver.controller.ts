@@ -97,12 +97,16 @@ export async function driverUpsertLocationController(req: Request, res: Response
   try {
     const io = getIOOrNull();
     if (io) {
-      io.emit("driver_location_update", {
+      const payload = {
         driverId: driver.id,
         lat: input.lat,
         lng: input.lng,
-      });
-      io.emit(`driver_location:${userId}`, { lat: input.lat, lng: input.lng });
+        heading: input.heading,
+        speed: input.speed,
+        updatedAt: new Date().toISOString(),
+      };
+      io.emit("driver_location_update", payload);
+      io.emit(`driver_location:${userId}`, payload);
     }
   } catch {}
 
