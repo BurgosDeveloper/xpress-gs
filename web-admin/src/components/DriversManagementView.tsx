@@ -101,7 +101,7 @@ export function DriversManagementView() {
   return (
     <div className="w-full h-full flex flex-col p-6 bg-[#0A0A08] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+      <div className="shrink-0 flex items-center justify-between mb-6 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
             <Car className="w-6 h-6 text-[#D4AF37]" />
@@ -123,8 +123,8 @@ export function DriversManagementView() {
       </div>
 
       {/* Search Bar */}
-      <div className="mb-6 flex justify-between items-center">
-        <div className="relative w-80">
+      <div className="shrink-0 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -135,18 +135,19 @@ export function DriversManagementView() {
           />
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-gray-400">
+        <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
           <span>{drivers.filter((d) => d.isAvailable).length} En Línea</span>
           <span>•</span>
           <span>{drivers.filter((d) => d.status === "APPROVED").length} Aprobados</span>
         </div>
       </div>
 
-      {/* Drivers Table */}
-      <div className="flex-1 overflow-y-auto rounded-2xl glass-panel border border-white/10">
-        <table className="w-full text-left text-xs text-gray-300">
-          <thead className="text-[11px] uppercase tracking-wider text-gray-400 bg-white/[0.03] border-b border-white/10 sticky top-0 backdrop-blur-md">
-            <tr>
+      {/* Drivers Table Card */}
+      <div className="flex-1 min-h-0 rounded-2xl glass-panel border border-white/10 flex flex-col overflow-hidden">
+        <div className="overflow-auto flex-1">
+          <table className="w-full text-left text-xs text-gray-300">
+            <thead className="text-[11px] uppercase tracking-wider text-[#F3C966] bg-[#18150B] border-b border-white/10 sticky top-0 z-10 shadow-md">
+              <tr>
               <th className="py-3.5 px-4 font-bold">Conductor</th>
               <th className="py-3.5 px-4 font-bold">Vehículo & Placa</th>
               <th className="py-3.5 px-4 font-bold">Contacto</th>
@@ -272,6 +273,7 @@ export function DriversManagementView() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal Recarga de Créditos */}

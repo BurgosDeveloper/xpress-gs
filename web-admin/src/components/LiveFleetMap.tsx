@@ -342,7 +342,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
       {/* Floating Top Telemetry & Controls Bar */}
-      <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between pointer-events-none gap-4">
+      <div className="absolute top-4 left-6 right-6 z-10 flex flex-wrap items-center justify-between pointer-events-none gap-3">
         {/* Fleet Stats Pill */}
         <div className="flex items-center gap-2.5 glass-panel-neon px-4 py-2.5 rounded-2xl pointer-events-auto border border-[#D4AF37]/30 shadow-[0_0_20px_rgba(212,175,55,0.15)]">
           <div className="flex items-center gap-2 pr-3 border-r border-white/10">
@@ -410,8 +410,8 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
         </div>
       </div>
 
-      {/* Floating Horizontal Driver Chips (Bottom Bar) */}
-      <div className="absolute bottom-6 left-6 right-6 z-10 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none pointer-events-auto">
+      {/* Floating Horizontal Driver Chips (Bottom Bar) - leaves clearance for map controls */}
+      <div className="absolute bottom-6 left-6 right-32 sm:right-36 z-10 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none pointer-events-auto">
         {drivers.map((d) => {
           const isSel = selectedDriver?.id === d.id;
           const isMov = Boolean(d.isMoving && d.lastMovedAt && Date.now() - d.lastMovedAt < 45000);

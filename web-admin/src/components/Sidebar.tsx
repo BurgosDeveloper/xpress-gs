@@ -9,10 +9,8 @@ import {
   Car,
   Settings,
   LogOut,
-  Radio,
   Volume2,
   VolumeX,
-  Wifi,
   WifiOff,
 } from "lucide-react";
 
@@ -72,42 +70,48 @@ export function Sidebar({ currentTab, onTabChange, pendingRidesCount = 0 }: Side
   ];
 
   return (
-    <aside className="w-[260px] h-full shrink-0 glass-panel border-r border-white/10 flex flex-col justify-between p-4 z-30 select-none">
+    <aside className="w-[270px] h-full shrink-0 bg-[#0E0C07] border-r border-white/10 flex flex-col justify-between p-4.5 z-30 select-none shadow-2xl">
       {/* Brand Header */}
       <div>
         <div className="flex items-center gap-3 px-2 py-3 mb-6 border-b border-white/10">
-          <div className="w-10 h-10 rounded-xl bg-[#141108] border border-[#D4AF37]/40 flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.4)] p-1">
-            <img src="/logo_xpress.png" alt="Xpress" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h2 className="font-extrabold text-sm tracking-wider text-white">XPRESS TRASLADOS</h2>
-            <p className="text-[10px] text-[#D4AF37] font-semibold tracking-widest uppercase">Oficina Principal</p>
+          <img
+            src="/logo_xpress.png"
+            alt="Xpress"
+            className="h-10 w-auto object-contain filter drop-shadow-[0_0_12px_rgba(212,175,55,0.6)]"
+          />
+          <div className="overflow-hidden">
+            <h2 className="font-black text-sm tracking-wider text-white">XPRESS TRASLADOS</h2>
+            <p className="text-[10px] text-[#D4AF37] font-bold tracking-widest uppercase truncate">
+              Oficina Principal
+            </p>
           </div>
         </div>
 
         {/* Navigation Items */}
-        <nav className="space-y-1.5">
+        <nav className="space-y-2">
           {navItems.map((item) => {
             const isActive = currentTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
                   isActive
-                    ? "bg-[#D4AF37] text-black shadow-[0_0_18px_rgba(212,175,55,0.6)]"
-                    : "text-gray-400 hover:text-[#F3C966] hover:bg-[#D4AF37]/10"
+                    ? "bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-black shadow-[0_4px_18px_rgba(212,175,55,0.4)]"
+                    : "text-gray-300 hover:text-white hover:bg-white/[0.05]"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={isActive ? "text-black" : "text-gray-400"}>{item.icon}</span>
+                  <span className={isActive ? "text-black" : "text-[#D4AF37]"}>{item.icon}</span>
                   <span>{item.label}</span>
                 </div>
 
                 {item.badge != null && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                    isActive ? "bg-black text-[#D4AF37]" : "bg-[#D4AF37] text-black"
-                  } animate-bounce`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      isActive ? "bg-black text-[#D4AF37]" : "bg-[#D4AF37] text-black"
+                    } animate-bounce`}
+                  >
                     {item.badge}
                   </span>
                 )}
@@ -120,17 +124,17 @@ export function Sidebar({ currentTab, onTabChange, pendingRidesCount = 0 }: Side
       {/* Bottom Controls & User Card */}
       <div className="space-y-3 pt-4 border-t border-white/10">
         {/* Real-time Status & Audio Controls */}
-        <div className="flex items-center justify-between px-2 py-1.5 rounded-xl bg-black/40 border border-white/5 text-[11px]">
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-black/50 border border-white/5 text-[11px]">
           <div className="flex items-center gap-2">
             {connected ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="font-semibold text-emerald-400">Sockets En Vivo</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                <span className="font-bold text-emerald-400">Sockets En Vivo</span>
               </>
             ) : (
               <>
                 <WifiOff className="w-3.5 h-3.5 text-red-400" />
-                <span className="font-semibold text-red-400">Desconectado</span>
+                <span className="font-bold text-red-400">Desconectado</span>
               </>
             )}
           </div>
@@ -140,13 +144,17 @@ export function Sidebar({ currentTab, onTabChange, pendingRidesCount = 0 }: Side
             title={soundEnabled ? "Silenciar alertas" : "Activar sonido de alertas"}
             className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-all cursor-pointer"
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-[#D4AF37]" /> : <VolumeX className="w-3.5 h-3.5 text-gray-500" />}
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4 text-[#D4AF37]" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-gray-500" />
+            )}
           </button>
         </div>
 
         {/* User Card */}
-        <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
-          <div className="overflow-hidden">
+        <div className="p-3 rounded-2xl bg-[#141108] border border-white/10 flex items-center justify-between">
+          <div className="overflow-hidden pr-2">
             <p className="text-xs font-bold text-white truncate">{user?.email || "Administrador"}</p>
             <p className="text-[10px] text-gray-400">Rol: Administrador</p>
           </div>
@@ -154,7 +162,7 @@ export function Sidebar({ currentTab, onTabChange, pendingRidesCount = 0 }: Side
           <button
             onClick={logout}
             title="Cerrar Sesión"
-            className="p-1.5 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all cursor-pointer shrink-0"
           >
             <LogOut className="w-4 h-4" />
           </button>

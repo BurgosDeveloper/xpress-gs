@@ -99,7 +99,7 @@ export function RidesDispatchView() {
   return (
     <div className="w-full h-full flex flex-col p-6 bg-[#0A0A08] overflow-hidden">
       {/* Top Header */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+      <div className="shrink-0 flex items-center justify-between mb-6 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
             <Send className="w-6 h-6 text-[#D4AF37]" />
@@ -121,11 +121,11 @@ export function RidesDispatchView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2">
+      <div className="shrink-0 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {[
             { id: "ALL", label: "Todos los Servicios" },
-            { id: "OPEN", label: "Pendientes (Buscando)", alert: rides.some((r) => r.status === "OPEN") },
+            { id: "OPEN", label: "Pendientes", alert: rides.some((r) => r.status === "OPEN") },
             { id: "ACTIVE", label: "En Curso / Asignados" },
             { id: "COMPLETED", label: "Finalizados" },
             { id: "CANCELLED", label: "Cancelados" },
@@ -133,7 +133,7 @@ export function RidesDispatchView() {
             <button
               key={tab.id}
               onClick={() => setStatusFilter(tab.id)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 statusFilter === tab.id
                   ? "bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.6)] font-extrabold"
                   : "glass-panel text-gray-400 hover:text-white"
@@ -145,7 +145,7 @@ export function RidesDispatchView() {
           ))}
         </div>
 
-        <div className="relative w-72">
+        <div className="relative w-full md:w-80 shrink-0">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -157,15 +157,16 @@ export function RidesDispatchView() {
         </div>
       </div>
 
-      {/* Rides Grid / Table */}
-      <div className="flex-1 overflow-y-auto pr-1 space-y-3">
+      {/* Rides Grid */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1">
         {filteredRides.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-gray-500 text-xs">
             <Clock className="w-8 h-8 mb-2 text-gray-600" />
             <p className="font-bold">No se encontraron servicios con este filtro.</p>
           </div>
         ) : (
-          filteredRides.map((ride) => {
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-4">
+          {filteredRides.map((ride) => {
             const isOpen = ride.status === "OPEN";
             const isActive = ["ASSIGNED", "ACCEPTED", "MATCHED", "IN_PROGRESS"].includes(ride.status);
             const isCompleted = ride.status === "COMPLETED";
@@ -269,7 +270,8 @@ export function RidesDispatchView() {
                 )}
               </div>
             );
-          })
+          })}
+          </div>
         )}
       </div>
 
