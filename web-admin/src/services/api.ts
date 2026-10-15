@@ -129,7 +129,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export async function apiLogin(email: string, password: string): Promise<{ token: string; user: User }> {
   const res = await request<{ ok: true; token: string; user: User }>("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email: email.trim(), password }),
+    body: JSON.stringify({ user: email.trim(), password }),
   });
 
   if (res.user.role !== "ADMIN") {
