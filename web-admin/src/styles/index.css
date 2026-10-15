@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --neon-blue: #0000FF;
-  --neon-cyan: #00E5FF;
-  --neon-glow: 0 0 20px rgba(0, 0, 255, 0.6);
-  --cyan-glow: 0 0 20px rgba(0, 229, 255, 0.6);
-  --bg-dark: #050811;
-  --card-dark: #0A0D18;
-  --card-border: rgba(255, 255, 255, 0.08);
+  --neon-gold: #D4AF37;
+  --neon-gold-bright: #F3C966;
+  --neon-gold-glow: 0 0 20px rgba(212, 175, 55, 0.5);
+  --bg-dark: #0A0A08;
+  --card-dark: #121008;
+  --card-border: rgba(212, 175, 55, 0.2);
 }
 
 * {
@@ -31,39 +30,41 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.3);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(212, 175, 55, 0.25);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 229, 255, 0.4);
+  background: rgba(212, 175, 55, 0.5);
 }
 
 /* Glassmorphism Classes */
 .glass-panel {
-  background: rgba(10, 13, 24, 0.85);
+  background: rgba(18, 16, 10, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-panel-neon {
-  background: rgba(10, 13, 24, 0.9);
+  background: rgba(18, 16, 10, 0.94);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 0, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 255, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.12);
 }
 
 .glow-btn {
-  background: #0000FF;
-  box-shadow: 0 0 15px rgba(0, 0, 255, 0.5);
+  background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.45);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glow-btn:hover {
-  background: #1A1AFF;
-  box-shadow: 0 0 25px rgba(0, 0, 255, 0.8);
+  background: linear-gradient(135deg, #F3C966 0%, #D4AF37 100%);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.75);
   transform: translateY(-1px);
 }
 .glow-btn:active {
@@ -74,7 +75,7 @@ body {
 .leaflet-container {
   width: 100%;
   height: 100%;
-  background: #050811 !important;
+  background: #0A0A08 !important;
 }
 
 /* Custom Vehicle Map Marker Styles */
@@ -91,37 +92,40 @@ body {
   width: 36px;
   height: 36px;
   border-radius: 18px;
-  background: #0A1026;
-  border: 2px solid #0000FF;
+  background: #141108;
+  border: 2px solid #D4AF37;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
-  box-shadow: 0 0 14px rgba(0, 0, 255, 0.7);
-  transition: transform 0.25s ease, border-color 0.25s ease;
+  color: #F3C966;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.65);
+  transition: transform 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
   position: relative;
 }
 
 .driver-marker-badge.selected {
-  border-color: #00E5FF;
-  box-shadow: 0 0 22px rgba(0, 229, 255, 0.9);
-  transform: scale(1.18);
+  border-color: #FFFFFF;
+  background: #D4AF37;
+  color: #000000;
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.95);
+  transform: scale(1.22);
 }
 
 .driver-marker-badge.offline {
   border-color: #555555;
-  background: #111111;
+  background: #181818;
+  color: #888888;
   box-shadow: none;
   opacity: 0.65;
 }
 
 .driver-marker-halo {
   position: absolute;
-  width: 52px;
-  height: 52px;
-  border-radius: 26px;
-  border: 2px solid #00E5FF;
-  background: rgba(0, 229, 255, 0.15);
+  width: 54px;
+  height: 54px;
+  border-radius: 27px;
+  border: 2px solid #D4AF37;
+  background: rgba(212, 175, 55, 0.2);
   animation: radar-pulse 2s infinite ease-out;
   pointer-events: none;
 }
@@ -139,22 +143,22 @@ body {
 
 .driver-marker-name {
   margin-top: 4px;
-  background: rgba(5, 8, 17, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 1px 6px;
+  background: rgba(14, 12, 8, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  padding: 1px 7px;
   border-radius: 6px;
   font-size: 10px;
   font-weight: 700;
   color: #FFFFFF;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
 }
 
 .driver-heading-arrow {
   position: absolute;
   top: -7px;
-  color: #00E5FF;
+  color: #D4AF37;
   font-size: 12px;
   line-height: 1;
-  filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.8));
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.9));
 }

@@ -29,29 +29,29 @@ export function LoginView() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#050811] relative overflow-hidden p-4">
-      {/* Background Neon Glow Orbs */}
-      <div className="absolute top-[-15%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[#0000FF] opacity-20 blur-[130px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#00E5FF] opacity-15 blur-[140px] pointer-events-none" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0A0A08] relative overflow-hidden p-4">
+      {/* Background Gold Glow Orbs */}
+      <div className="absolute top-[-15%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[#D4AF37] opacity-15 blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#B8860B] opacity-10 blur-[150px] pointer-events-none" />
 
       <div className="w-full max-w-[440px] z-10">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0A1026] border-2 border-[#0000FF] shadow-[0_0_25px_rgba(0,0,255,0.6)] mb-4">
-            <Radio className="w-8 h-8 text-[#00E5FF] animate-pulse" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-[#141108] border-2 border-[#D4AF37]/50 shadow-[0_0_30px_rgba(212,175,55,0.4)] mb-4 p-3">
+            <img src="/logo_xpress.png" alt="Xpress Traslados" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
-            XPRESS <span className="text-[#00E5FF]">TRASLADOS</span>
+            XPRESS <span className="text-[#D4AF37]">TRASLADOS</span>
           </h1>
-          <p className="text-xs uppercase tracking-widest text-[#8892B0] font-semibold">
+          <p className="text-xs uppercase tracking-widest text-[#D4AF37]/80 font-semibold">
             Centro de Comando Satelital • Oficina Principal
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="glass-panel-neon rounded-2xl p-8 shadow-2xl relative">
-          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/10 text-xs font-semibold text-[#00E5FF]">
-            <ShieldCheck className="w-4 h-4 text-[#00E5FF]" />
+        <div className="glass-panel-neon rounded-2xl p-8 shadow-2xl relative border border-[#D4AF37]/30">
+          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/10 text-xs font-semibold text-[#D4AF37]">
+            <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
             <span>ACCESO RESTRINGIDO — EXCLUSIVO ADMINISTRADOR</span>
           </div>
 
@@ -78,7 +78,7 @@ export function LoginView() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin o admin@xpress.com"
-                  className="w-full bg-[#050811]/90 border border-white/15 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#0000FF] focus:ring-2 focus:ring-[#0000FF]/40 transition-all"
+                  className="w-full bg-[#050811]/90 border border-white/15 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/40 transition-all"
                 />
               </div>
             </div>
@@ -95,7 +95,7 @@ export function LoginView() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-[#050811]/90 border border-white/15 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#0000FF] focus:ring-2 focus:ring-[#0000FF]/40 transition-all"
+                  className="w-full bg-[#050811]/90 border border-white/15 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/40 transition-all"
                 />
               </div>
             </div>
@@ -103,10 +103,10 @@ export function LoginView() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 glow-btn text-white rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full h-12 glow-btn rounded-xl font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Ingresar a la Plataforma</span>

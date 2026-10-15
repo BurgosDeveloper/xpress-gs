@@ -99,12 +99,12 @@ export function DriversManagementView() {
   });
 
   return (
-    <div className="w-full h-full flex flex-col p-6 bg-[#050811] overflow-hidden">
+    <div className="w-full h-full flex flex-col p-6 bg-[#0A0A08] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
-            <Car className="w-6 h-6 text-[#00E5FF]" />
+            <Car className="w-6 h-6 text-[#D4AF37]" />
             <span>Gestión de Flota & Conductores</span>
           </h1>
           <p className="text-xs text-gray-400 mt-1">
@@ -115,9 +115,9 @@ export function DriversManagementView() {
         <button
           onClick={loadDrivers}
           disabled={loading}
-          className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#0000FF] cursor-pointer transition-all"
+          className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#D4AF37] hover:text-[#F3C966] cursor-pointer transition-all"
         >
-          <RefreshCw className={`w-4 h-4 text-[#00E5FF] ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 text-[#D4AF37] ${loading ? "animate-spin" : ""}`} />
           <span>Actualizar</span>
         </button>
       </div>
@@ -131,7 +131,7 @@ export function DriversManagementView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, teléfono, placa..."
-            className="w-full bg-[#0A0D18] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#0000FF]"
+            className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37]"
           />
         </div>
 
@@ -171,10 +171,10 @@ export function DriversManagementView() {
                         <img
                           src={driver.photoUrl}
                           alt={driver.fullName}
-                          className="w-9 h-9 rounded-xl object-cover border border-[#0000FF]"
+                          className="w-9 h-9 rounded-xl object-cover border border-[#D4AF37]"
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-xl bg-[#0A1026] border border-[#0000FF] flex items-center justify-center font-bold text-xs text-[#00E5FF]">
+                        <div className="w-9 h-9 rounded-xl bg-[#141108] border border-[#D4AF37]/50 flex items-center justify-center font-bold text-xs text-[#F3C966]">
                           {driver.fullName.slice(0, 2).toUpperCase()}
                         </div>
                       )}
@@ -196,7 +196,7 @@ export function DriversManagementView() {
                     <p className="font-semibold text-white text-xs">
                       {driver.vehicle ? `${driver.vehicle.brand} ${driver.vehicle.model}` : "Sin registrar"}
                     </p>
-                    <span className="font-mono text-[10px] text-[#00E5FF] bg-black/40 px-1.5 py-0.5 rounded border border-white/10">
+                    <span className="font-mono text-[10px] text-[#F3C966] bg-black/40 px-1.5 py-0.5 rounded border border-[#D4AF37]/30">
                       {driver.vehicle?.plate || "S/P"}
                     </span>
                   </td>
@@ -211,8 +211,8 @@ export function DriversManagementView() {
 
                   {/* Rendimiento */}
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-1 text-amber-400 font-bold mb-0.5">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <div className="flex items-center gap-1 text-[#D4AF37] font-bold mb-0.5">
+                      <Star className="w-3.5 h-3.5 fill-[#D4AF37] text-[#D4AF37]" />
                       <span>{Number(driver.avgRating ?? 5.0).toFixed(1)}</span>
                       <span className="text-gray-500 font-normal">({driver.ratingsCount ?? 0})</span>
                     </div>
@@ -228,7 +228,7 @@ export function DriversManagementView() {
                       <button
                         onClick={() => setSelectedDriverForCredits(driver)}
                         title="Recargar Créditos"
-                        className="p-1 rounded-lg bg-[#0000FF]/20 text-[#00E5FF] hover:bg-[#0000FF]/40 cursor-pointer"
+                        className="p-1 rounded-lg bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/40 cursor-pointer transition-all"
                       >
                         <PlusCircle className="w-3.5 h-3.5" />
                       </button>
@@ -280,7 +280,7 @@ export function DriversManagementView() {
           <div className="glass-panel-neon rounded-2xl w-full max-w-md p-6">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
               <div className="flex items-center gap-2.5">
-                <CreditCard className="w-5 h-5 text-[#00E5FF]" />
+                <CreditCard className="w-5 h-5 text-[#D4AF37]" />
                 <h3 className="font-extrabold text-base text-white">Recarga de Créditos</h3>
               </div>
               <button
@@ -310,14 +310,14 @@ export function DriversManagementView() {
                   value={creditAmount}
                   onChange={(e) => setCreditAmount(e.target.value)}
                   placeholder="20000"
-                  className="w-full bg-[#050811] border border-white/15 rounded-xl py-2.5 px-3 text-sm text-white font-mono focus:outline-none focus:border-[#0000FF]"
+                  className="w-full bg-[#121008] border border-white/15 rounded-xl py-2.5 px-3 text-sm text-white font-mono focus:outline-none focus:border-[#D4AF37]"
                 />
                 <div className="flex gap-2 mt-2">
                   {["10000", "20000", "50000", "100000"].map((preset) => (
                     <button
                       key={preset}
                       onClick={() => setCreditAmount(preset)}
-                      className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] font-mono text-gray-300 hover:border-[#0000FF] cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] font-mono text-gray-300 hover:border-[#D4AF37] hover:text-[#F3C966] cursor-pointer transition-all"
                     >
                       +${parseInt(preset, 10).toLocaleString("es-CO")}
                     </button>
@@ -333,14 +333,14 @@ export function DriversManagementView() {
                   type="text"
                   value={creditNote}
                   onChange={(e) => setCreditNote(e.target.value)}
-                  className="w-full bg-[#050811] border border-white/15 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#0000FF]"
+                  className="w-full bg-[#121008] border border-white/15 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
                 />
               </div>
 
               <button
                 onClick={handleRechargeCredits}
                 disabled={creditSubmitting}
-                className="w-full h-11 glow-btn text-white rounded-xl font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+                className="w-full h-11 glow-btn rounded-xl font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
               >
                 {creditSubmitting ? "Procesando..." : "Confirmar Recarga"}
               </button>

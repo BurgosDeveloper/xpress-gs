@@ -97,12 +97,12 @@ export function RidesDispatchView() {
   const availableDrivers = drivers.filter((d) => d.isAvailable && d.user?.isActive);
 
   return (
-    <div className="w-full h-full flex flex-col p-6 bg-[#050811] overflow-hidden">
+    <div className="w-full h-full flex flex-col p-6 bg-[#0A0A08] overflow-hidden">
       {/* Top Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
-            <Send className="w-6 h-6 text-[#00E5FF]" />
+            <Send className="w-6 h-6 text-[#D4AF37]" />
             <span>Consola de Despacho & Servicios</span>
           </h1>
           <p className="text-xs text-gray-400 mt-1">
@@ -113,9 +113,9 @@ export function RidesDispatchView() {
         <button
           onClick={() => void loadData(false)}
           disabled={loading}
-          className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#0000FF] cursor-pointer transition-all"
+          className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#D4AF37] hover:text-[#F3C966] cursor-pointer transition-all"
         >
-          <RefreshCw className={`w-4 h-4 text-[#00E5FF] ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 text-[#D4AF37] ${loading ? "animate-spin" : ""}`} />
           <span>Actualizar</span>
         </button>
       </div>
@@ -135,7 +135,7 @@ export function RidesDispatchView() {
               onClick={() => setStatusFilter(tab.id)}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 statusFilter === tab.id
-                  ? "bg-[#0000FF] text-white shadow-[0_0_15px_rgba(0,0,255,0.6)]"
+                  ? "bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.6)] font-extrabold"
                   : "glass-panel text-gray-400 hover:text-white"
               }`}
             >
@@ -152,7 +152,7 @@ export function RidesDispatchView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por cliente, ID o zona..."
-            className="w-full bg-[#0A0D18] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#0000FF]"
+            className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37]"
           />
         </div>
       </div>
@@ -178,13 +178,13 @@ export function RidesDispatchView() {
                   isOpen
                     ? "border-amber-500/40 bg-amber-500/[0.02]"
                     : isActive
-                    ? "border-[#0000FF]/50 bg-[#0000FF]/[0.02]"
+                    ? "border-[#D4AF37]/50 bg-[#D4AF37]/[0.02]"
                     : "border-white/5"
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-extrabold text-[#00E5FF] bg-black/40 px-2 py-1 rounded-lg border border-white/10">
+                    <span className="font-mono text-xs font-extrabold text-[#F3C966] bg-black/40 px-2 py-1 rounded-lg border border-[#D4AF37]/30">
                       #{ride.id.slice(-6)}
                     </span>
                     <span
@@ -192,7 +192,7 @@ export function RidesDispatchView() {
                         isOpen
                           ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse"
                           : isActive
-                          ? "bg-[#0000FF]/30 text-white border border-[#0000FF]"
+                          ? "bg-[#D4AF37]/20 text-[#F3C966] border border-[#D4AF37]"
                           : isCompleted
                           ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                           : "bg-red-500/20 text-red-300 border border-red-500/40"
@@ -227,7 +227,7 @@ export function RidesDispatchView() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-300 py-2 border-y border-white/5">
                   <div className="space-y-1.5">
                     <p className="flex items-start gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#0000FF] mt-0.5 shrink-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] mt-0.5 shrink-0" />
                       <span className="text-gray-400">Origen: <strong className="text-white">{ride.pickupAddress || "Coordenadas fijadas"}</strong></span>
                     </p>
                     <p className="flex items-start gap-2">
@@ -238,7 +238,7 @@ export function RidesDispatchView() {
 
                   <div className="space-y-1.5 flex flex-col justify-center">
                     <p className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5 text-[#00E5FF]" />
+                      <User className="w-3.5 h-3.5 text-[#D4AF37]" />
                       <span>Cliente: <strong className="text-white">{ride.passenger?.fullName || "Anónimo"}</strong></span>
                       {ride.passenger?.phone && (
                         <span className="text-gray-400">({ride.passenger.phone})</span>
@@ -304,7 +304,7 @@ export function RidesDispatchView() {
                 availableDrivers.map((d) => (
                   <div
                     key={d.id}
-                    className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between hover:border-[#0000FF] transition-all"
+                    className="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between hover:border-[#D4AF37] transition-all"
                   >
                     <div className="flex items-center gap-3">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
@@ -319,7 +319,7 @@ export function RidesDispatchView() {
                     <button
                       onClick={() => handleAssignDriver(d.id)}
                       disabled={assigningDriverId === d.id}
-                      className="px-3 py-1.5 rounded-lg bg-[#0000FF] hover:bg-[#1A1AFF] text-white font-bold text-xs cursor-pointer disabled:opacity-50"
+                      className="px-3.5 py-1.5 rounded-lg bg-[#D4AF37] hover:bg-[#F3C966] text-black font-extrabold text-xs cursor-pointer disabled:opacity-50 transition-all shadow-[0_0_10px_rgba(212,175,55,0.4)]"
                     >
                       {assigningDriverId === d.id ? "Asignando..." : "Asignar"}
                     </button>

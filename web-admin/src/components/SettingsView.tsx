@@ -55,12 +55,12 @@ export function SettingsView() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col p-6 bg-[#050811] overflow-y-auto">
+    <div className="w-full h-full flex flex-col p-6 bg-[#0A0A08] overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
-            <Settings className="w-6 h-6 text-[#00E5FF]" />
+            <Settings className="w-6 h-6 text-[#D4AF37]" />
             <span>Configuración del Sistema & Tarifas</span>
           </h1>
           <p className="text-xs text-gray-400 mt-1">
@@ -71,9 +71,9 @@ export function SettingsView() {
         <button
           onClick={loadConfig}
           disabled={loading}
-          className="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#0000FF] cursor-pointer"
+          className="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#D4AF37] hover:text-[#F3C966] cursor-pointer transition-all"
         >
-          <RefreshCw className={`w-4 h-4 text-[#00E5FF] ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 text-[#D4AF37] ${loading ? "animate-spin" : ""}`} />
           <span>Recargar</span>
         </button>
       </div>
@@ -81,7 +81,7 @@ export function SettingsView() {
       <form onSubmit={handleSave} className="max-w-4xl space-y-6">
         {/* Card: Tarifas Base */}
         <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
-          <h2 className="text-sm font-bold text-[#00E5FF] uppercase tracking-wider flex items-center gap-2">
+          <h2 className="text-sm font-bold text-[#D4AF37] uppercase tracking-wider flex items-center gap-2">
             <DollarSign className="w-4 h-4" />
             <span>Tarifas Principales (COP)</span>
           </h2>
@@ -95,7 +95,7 @@ export function SettingsView() {
                 type="number"
                 value={pricing?.baseFare ?? 0}
                 onChange={(e) => setPricing((p) => (p ? { ...p, baseFare: Number(e.target.value) } : null))}
-                className="w-full bg-[#050811] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-mono focus:border-[#0000FF] focus:outline-none"
+                className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-mono focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
 
@@ -107,7 +107,7 @@ export function SettingsView() {
                 type="number"
                 value={pricing?.perKm ?? 0}
                 onChange={(e) => setPricing((p) => (p ? { ...p, perKm: Number(e.target.value) } : null))}
-                className="w-full bg-[#050811] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-mono focus:border-[#0000FF] focus:outline-none"
+                className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-mono focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
 
@@ -119,7 +119,7 @@ export function SettingsView() {
                 type="number"
                 value={appConfig?.matchingRadiusM ?? 2000}
                 onChange={(e) => setAppConfig((a) => (a ? { ...a, matchingRadiusM: Number(e.target.value) } : null))}
-                className="w-full bg-[#050811] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-mono focus:border-[#0000FF] focus:outline-none"
+                className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 px-3 text-xs text-white font-mono focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
           </div>
@@ -142,7 +142,7 @@ export function SettingsView() {
                 value={appConfig?.zoeWhatsappPhone ?? ""}
                 onChange={(e) => setAppConfig((a) => (a ? { ...a, zoeWhatsappPhone: e.target.value } : null))}
                 placeholder="+58414..."
-                className="w-full bg-[#050811] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:border-[#0000FF] focus:outline-none"
+                className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
 
@@ -155,7 +155,7 @@ export function SettingsView() {
                 value={appConfig?.adminWhatsappPhone ?? ""}
                 onChange={(e) => setAppConfig((a) => (a ? { ...a, adminWhatsappPhone: e.target.value } : null))}
                 placeholder="+58424..."
-                className="w-full bg-[#050811] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:border-[#0000FF] focus:outline-none"
+                className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
           </div>
@@ -164,7 +164,7 @@ export function SettingsView() {
         <button
           type="submit"
           disabled={saving}
-          className="glow-btn text-white px-6 py-3 rounded-xl font-bold text-xs tracking-wider uppercase flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          className="glow-btn px-6 py-3 rounded-xl font-bold text-xs tracking-wider uppercase flex items-center gap-2 cursor-pointer disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           <span>{saving ? "Guardando Cambios..." : "Guardar Configuración en Producción"}</span>

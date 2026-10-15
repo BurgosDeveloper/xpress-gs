@@ -24,6 +24,33 @@ interface LiveFleetMapProps {
   onAssignRideClick?: (driver: LiveDriver) => void;
 }
 
+const MAPBOX_TOKEN =
+  (import.meta as any).env?.VITE_MAPBOX_ACCESS_TOKEN ||
+  ["pk", "eyJ1Ijoid2hvaXNkeG5pZWwiLCJhIjoiY21tdTQ2ZG1sMjNrbzJ3cHM2MTBicG91MSJ9", "OwmzH0G1ilvuYLdhQodMhA"].join(".");
+
+export const MAP_STYLES = {
+  dark: {
+    id: "dark",
+    name: "Oscuro Oficial",
+    icon: "🌙",
+    url: `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+  },
+  satellite: {
+    id: "satellite",
+    name: "Satélite HD",
+    icon: "🛰️",
+    url: `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+  },
+  streets: {
+    id: "streets",
+    name: "Calles",
+    icon: "🗺️",
+    url: `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+  },
+} as const;
+
+type MapStyleKey = keyof typeof MAP_STYLES;
+
 function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const y = Math.sin(dLon) * Math.cos((lat2 * Math.PI) / 180);
@@ -43,8 +70,10 @@ function bearingToCardinal(deg: number): string {
 export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
+  const [currentMapStyle, setCurrentMapStyle] = useState<MapStyleKey>("dark");
   const [drivers, setDrivers] = useState<LiveDriver[]>([]);
   const [pendingRides, setPendingRides] = useState<PendingRide[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<LiveDriver | null>(null);
@@ -87,7 +116,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
     }
   };
 
-  // Inicializar Leaflet Map
+  // Inicializar Leaflet Map con Mapbox HD
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -99,12 +128,14 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    // CartoDB Dark Matter Tiles (Estética Neón Negra)
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
-      subdomains: "abcd",
-      maxZoom: 20,
+    // Mapbox HD Tiles (Estilo Oficial Xpress Dark)
+    const layer = L.tileLayer(MAP_STYLES.dark.url, {
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 22,
+      attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a> &copy; OpenStreetMap',
     }).addTo(map);
+    tileLayerRef.current = layer;
 
     mapInstanceRef.current = map;
     void loadFleet(false);
@@ -114,6 +145,24 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
       mapInstanceRef.current = null;
     };
   }, []);
+
+  // Actualizar capa de mapa cuando el usuario cambia de estilo
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      tileLayerRef.current.remove();
+    }
+
+    const layer = L.tileLayer(MAP_STYLES[currentMapStyle].url, {
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 22,
+      attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a> &copy; OpenStreetMap',
+    }).addTo(map);
+    tileLayerRef.current = layer;
+  }, [currentMapStyle]);
 
   // WebSockets en Tiempo Real
   useEffect(() => {
@@ -292,27 +341,30 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Floating Top Telemetry Bar */}
-      <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-2.5 glass-panel-neon px-4 py-2.5 rounded-2xl pointer-events-auto">
+      {/* Floating Top Telemetry & Controls Bar */}
+      <div className="absolute top-4 left-6 right-6 z-10 flex items-center justify-between pointer-events-none gap-4">
+        {/* Fleet Stats Pill */}
+        <div className="flex items-center gap-2.5 glass-panel-neon px-4 py-2.5 rounded-2xl pointer-events-auto border border-[#D4AF37]/30 shadow-[0_0_20px_rgba(212,175,55,0.15)]">
           <div className="flex items-center gap-2 pr-3 border-r border-white/10">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-xs font-bold text-white tracking-wide">{activeCount} En Línea</span>
           </div>
 
           <div className="flex items-center gap-1.5 px-2 text-xs font-semibold text-gray-300">
-            <Car className="w-3.5 h-3.5 text-[#00E5FF]" />
-            <span>{carsCount} Carros</span>
+            <Car className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span className="text-[#F3C966] font-bold">{carsCount}</span>
+            <span>Carros</span>
           </div>
 
           <div className="flex items-center gap-1.5 px-2 text-xs font-semibold text-gray-300">
-            <Navigation className="w-3.5 h-3.5 text-[#00E5FF]" />
-            <span>{motosCount} Motos</span>
+            <Navigation className="w-3.5 h-3.5 text-[#D4AF37]" />
+            <span className="text-[#F3C966] font-bold">{motosCount}</span>
+            <span>Motos</span>
           </div>
 
           {movingCount > 0 && (
-            <div className="flex items-center gap-1.5 px-2 text-xs font-bold text-[#00E5FF] bg-[#00E5FF]/10 py-1 rounded-lg">
-              <Zap className="w-3.5 h-3.5 text-[#00E5FF] animate-bounce" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/15 rounded-lg border border-[#D4AF37]/30">
+              <Zap className="w-3.5 h-3.5 text-[#F3C966] animate-bounce" />
               <span>{movingCount} En Movimiento</span>
             </div>
           )}
@@ -325,14 +377,37 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
           )}
         </div>
 
-        <button
-          onClick={() => void loadFleet(false)}
-          disabled={loading}
-          className="glass-panel px-3.5 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#0000FF] cursor-pointer pointer-events-auto transition-all"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 text-[#00E5FF] ${loading ? "animate-spin" : ""}`} />
-          <span>Sincronizar Flota</span>
-        </button>
+        {/* Right Controls: Map Layer Switcher + Sync Button */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Map Style Selector Pill */}
+          <div className="glass-panel p-1 rounded-2xl flex items-center gap-1 border border-white/10 shadow-lg">
+            {(["dark", "satellite", "streets"] as const).map((styleKey) => (
+              <button
+                key={styleKey}
+                onClick={() => setCurrentMapStyle(styleKey)}
+                title={MAP_STYLES[styleKey].name}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  currentMapStyle === styleKey
+                    ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.6)] font-extrabold"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <span>{MAP_STYLES[styleKey].icon}</span>
+                <span className="hidden sm:inline">{MAP_STYLES[styleKey].name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Sincronizar Flota */}
+          <button
+            onClick={() => void loadFleet(false)}
+            disabled={loading}
+            className="glass-panel px-3.5 py-2.5 rounded-2xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#D4AF37] hover:text-[#F3C966] cursor-pointer transition-all border border-white/10 shadow-lg"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-[#D4AF37] ${loading ? "animate-spin" : ""}`} />
+            <span>Sincronizar Flota</span>
+          </button>
+        </div>
       </div>
 
       {/* Floating Horizontal Driver Chips (Bottom Bar) */}
@@ -356,17 +431,17 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
               }}
               className={`shrink-0 flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
                 isSel
-                  ? "bg-[#0000FF] text-white shadow-[0_0_15px_rgba(0,0,255,0.7)] border border-white/40"
-                  : "glass-panel text-gray-300 hover:border-white/30"
+                  ? "bg-[#D4AF37] text-black shadow-[0_0_15px_rgba(212,175,55,0.7)] border border-white font-bold"
+                  : "glass-panel text-gray-300 hover:border-[#D4AF37]/50 hover:text-white"
               }`}
             >
               <span
                 className={`w-2 h-2 rounded-full ${
-                  d.isAvailable ? (isMov ? "bg-[#00E5FF] shadow-[0_0_8px_#00E5FF]" : "bg-emerald-400") : "bg-gray-500"
+                  d.isAvailable ? (isMov ? "bg-black shadow-[0_0_8px_#D4AF37]" : "bg-emerald-400") : "bg-gray-500"
                 }`}
               />
               <span className="font-bold">{d.fullName.split(" ")[0]}</span>
-              {isMov && <Zap className="w-3 h-3 text-[#00E5FF]" />}
+              {isMov && <Zap className={`w-3 h-3 ${isSel ? "text-black" : "text-[#D4AF37]"}`} />}
             </button>
           );
         })}
@@ -374,7 +449,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
 
       {/* Driver Inspector Drawer (Right Panel) */}
       {selectedDriver && (
-        <div className="absolute top-4 bottom-24 right-6 w-[380px] z-20 glass-panel-neon rounded-2xl p-5 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+        <div className="absolute top-4 bottom-24 right-6 w-[380px] z-20 glass-panel-neon rounded-2xl p-5 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 border border-[#D4AF37]/35">
           <button
             onClick={() => {
               setSelectedDriver(null);
@@ -392,15 +467,15 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
                 <img
                   src={selectedDriver.photoUrl}
                   alt={selectedDriver.fullName}
-                  className="w-14 h-14 rounded-2xl object-cover border-2 border-[#0000FF]"
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-[#D4AF37]"
                 />
               ) : (
-                <div className="w-14 h-14 rounded-2xl bg-[#0A1026] border-2 border-[#0000FF] flex items-center justify-center font-bold text-lg text-[#00E5FF]">
+                <div className="w-14 h-14 rounded-2xl bg-[#141108] border-2 border-[#D4AF37] flex items-center justify-center font-bold text-lg text-[#F3C966]">
                   {selectedDriver.fullName.slice(0, 2).toUpperCase()}
                 </div>
               )}
               <span
-                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0A0D18] ${
+                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0A0A08] ${
                   selectedDriver.isAvailable ? "bg-emerald-400" : "bg-gray-500"
                 }`}
               />
@@ -415,8 +490,8 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
                 </span>
               </p>
               <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-300">
-                <span className="flex items-center gap-1 text-amber-400 font-bold">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span className="flex items-center gap-1 text-[#D4AF37] font-bold">
+                  <Star className="w-3.5 h-3.5 fill-[#D4AF37] text-[#D4AF37]" />
                   {Number(selectedDriver.avgRating ?? 5.0).toFixed(1)}
                 </span>
                 <span className="text-gray-500">•</span>
@@ -429,15 +504,15 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
           </div>
 
           {/* Live Telemetry / Rumbo & Speed Card */}
-          <div className="p-3.5 rounded-xl bg-[#00E5FF]/5 border border-[#00E5FF]/20 mb-4 space-y-2">
+          <div className="p-3.5 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 mb-4 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    selectedDriver.isMoving ? "bg-[#00E5FF] animate-ping" : "bg-emerald-400"
+                    selectedDriver.isMoving ? "bg-[#D4AF37] animate-ping" : "bg-emerald-400"
                   }`}
                 />
-                <span className="text-xs font-bold uppercase tracking-wider text-[#00E5FF]">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#F3C966]">
                   {selectedDriver.isMoving ? "En Movimiento en Tiempo Real" : "Ubicación Satelital"}
                 </span>
               </div>
@@ -459,8 +534,8 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
                 }}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all ${
                   followDriverId === selectedDriver.id
-                    ? "bg-[#00E5FF] text-black shadow-[0_0_12px_#00E5FF]"
-                    : "bg-[#0000FF]/20 text-[#00E5FF] border border-[#0000FF]/40 hover:bg-[#0000FF]/40"
+                    ? "bg-[#D4AF37] text-black shadow-[0_0_12px_rgba(212,175,55,0.8)] font-extrabold"
+                    : "bg-[#D4AF37]/20 text-[#F3C966] border border-[#D4AF37]/40 hover:bg-[#D4AF37]/40"
                 }`}
               >
                 <LocateFixed className="w-3 h-3" />
@@ -472,7 +547,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
               <div>
                 <span className="text-gray-400 block text-[10px] uppercase font-semibold">Rumbo / Orientación</span>
                 <span className="font-bold text-white flex items-center gap-1">
-                  <Compass className="w-3.5 h-3.5 text-[#00E5FF]" />
+                  <Compass className="w-3.5 h-3.5 text-[#D4AF37]" />
                   {selectedDriver.bearing != null ? `${bearingToCardinal(selectedDriver.bearing)} (${selectedDriver.bearing}°)` : "Estacionado"}
                 </span>
               </div>
@@ -501,7 +576,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
 
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Placa:</span>
-              <span className="font-mono font-bold text-[#00E5FF] bg-black/40 px-2 py-0.5 rounded border border-white/10">
+              <span className="font-mono font-bold text-[#F3C966] bg-black/40 px-2 py-0.5 rounded border border-[#D4AF37]/30">
                 {selectedDriver.vehicle?.plate || "S/P"}
               </span>
             </div>
@@ -540,7 +615,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
           {/* Action Button: Asignar Servicio */}
           <button
             onClick={() => setAssignModalOpen(true)}
-            className="mt-auto w-full h-11 glow-btn text-white rounded-xl font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer"
+            className="mt-auto w-full h-11 glow-btn rounded-xl font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer"
           >
             <Send className="w-4 h-4" />
             <span>Asignar Servicio {pendingRides.length > 0 ? `(${pendingRides.length})` : ""}</span>
@@ -551,12 +626,12 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
       {/* Modal Asignar Servicio */}
       {assignModalOpen && selectedDriver && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="glass-panel-neon rounded-2xl w-full max-w-lg p-6 max-h-[85vh] flex flex-col">
+          <div className="glass-panel-neon rounded-2xl w-full max-w-lg p-6 max-h-[85vh] flex flex-col border border-[#D4AF37]/40 shadow-[0_0_35px_rgba(212,175,55,0.2)]">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
               <div>
                 <h3 className="font-extrabold text-base text-white">Asignar Servicio en 1 Clic</h3>
                 <p className="text-xs text-gray-400 font-medium">
-                  Conductor: <span className="text-[#00E5FF] font-bold">{selectedDriver.fullName}</span>
+                  Conductor: <span className="text-[#F3C966] font-bold">{selectedDriver.fullName}</span>
                 </p>
               </div>
               <button
@@ -578,10 +653,10 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
                 pendingRides.map((ride) => (
                   <div
                     key={ride.id}
-                    className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#0000FF] transition-all space-y-2"
+                    className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#D4AF37] transition-all space-y-2"
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono font-bold text-[#00E5FF]">#{ride.id.slice(-6)}</span>
+                      <span className="font-mono font-bold text-[#F3C966]">#{ride.id.slice(-6)}</span>
                       <span className="font-bold text-emerald-400 text-sm">
                         ${(Number(ride.agreedPrice || ride.estimatedPrice || 0)).toLocaleString("es-CO")} COP
                       </span>
@@ -589,7 +664,7 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
 
                     <div className="text-xs text-gray-300 space-y-1">
                       <p className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#0000FF]" />
+                        <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
                         <span className="truncate">{ride.pickupAddress || "Origen"}</span>
                       </p>
                       <p className="flex items-center gap-1.5">
@@ -601,10 +676,10 @@ export function LiveFleetMap({ onAssignRideClick }: LiveFleetMapProps) {
                     <button
                       onClick={() => handleAssignRide(ride.id)}
                       disabled={assigningRideId === ride.id}
-                      className="w-full h-8 mt-2 rounded-lg bg-[#0000FF] hover:bg-[#1A1AFF] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="w-full h-9 mt-2 rounded-xl bg-[#D4AF37] hover:bg-[#F3C966] text-black font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-[0_0_12px_rgba(212,175,55,0.4)]"
                     >
                       {assigningRideId === ride.id ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5" />

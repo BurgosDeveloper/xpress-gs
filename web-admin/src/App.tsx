@@ -48,11 +48,11 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="w-screen h-screen flex flex-col items-center justify-center bg-[#050811] text-white">
-        <div className="w-14 h-14 rounded-2xl bg-[#0A1026] border-2 border-[#0000FF] flex items-center justify-center shadow-[0_0_25px_rgba(0,0,255,0.6)] mb-4 animate-pulse">
-          <Radio className="w-7 h-7 text-[#00E5FF]" />
+      <div className="w-screen h-screen flex flex-col items-center justify-center bg-[#0A0A08] text-white">
+        <div className="w-16 h-16 rounded-2xl bg-[#141108] border-2 border-[#D4AF37]/50 flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.4)] mb-4 animate-pulse p-2">
+          <img src="/logo_xpress.png" alt="Xpress" className="w-full h-full object-contain" />
         </div>
-        <p className="text-xs uppercase tracking-widest text-[#8892B0] font-bold">
+        <p className="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">
           Iniciando Centro de Control Satelital...
         </p>
       </div>
@@ -64,7 +64,7 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#050811]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0A0A08]">
       {/* Fixed Left Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -73,7 +73,7 @@ export function App() {
       />
 
       {/* Main Content View */}
-      <main className="flex-1 h-full relative overflow-hidden bg-[#050811]">
+      <main className="flex-1 h-full relative overflow-hidden bg-[#0A0A08]">
         {currentTab === "map" && <LiveFleetMap />}
         {currentTab === "dispatch" && <RidesDispatchView />}
         {currentTab === "drivers" && <DriversManagementView />}

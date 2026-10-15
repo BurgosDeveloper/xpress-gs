@@ -51,7 +51,7 @@ export function PassengersView() {
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
         <div>
           <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
-            <Users className="w-6 h-6 text-[#00E5FF]" />
+            <Users className="w-6 h-6 text-[#D4AF37]" />
             <span>Directorio de Clientes / Pasajeros</span>
           </h1>
           <p className="text-xs text-gray-400 mt-1">
@@ -62,9 +62,9 @@ export function PassengersView() {
         <button
           onClick={loadPassengers}
           disabled={loading}
-          className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#0000FF] cursor-pointer transition-all"
+          className="glass-panel px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-bold text-white hover:border-[#D4AF37] hover:text-[#F3C966] cursor-pointer transition-all"
         >
-          <RefreshCw className={`w-4 h-4 text-[#00E5FF] ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 text-[#D4AF37] ${loading ? "animate-spin" : ""}`} />
           <span>Actualizar</span>
         </button>
       </div>
@@ -78,7 +78,7 @@ export function PassengersView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, correo, teléfono..."
-            className="w-full bg-[#0A0D18] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#0000FF]"
+            className="w-full bg-[#121008] border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37]"
           />
         </div>
       </div>
@@ -111,7 +111,7 @@ export function PassengersView() {
                           className="w-9 h-9 rounded-xl object-cover border border-white/10"
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-xl bg-[#0A1026] border border-white/10 flex items-center justify-center font-bold text-xs text-[#00E5FF]">
+                        <div className="w-9 h-9 rounded-xl bg-[#141108] border border-[#D4AF37]/30 flex items-center justify-center font-bold text-xs text-[#F3C966]">
                           {(passenger.fullName || "U").slice(0, 2).toUpperCase()}
                         </div>
                       )}
