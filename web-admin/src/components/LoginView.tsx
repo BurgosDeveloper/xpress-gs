@@ -68,16 +68,16 @@ export function LoginView() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">
-                Correo Electrónico
+                Usuario o Correo Electrónico
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@xpress.com"
+                  placeholder="admin o admin@xpress.com"
                   className="w-full bg-[#050811]/90 border border-white/15 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#0000FF] focus:ring-2 focus:ring-[#0000FF]/40 transition-all"
                 />
               </div>
