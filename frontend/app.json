@@ -2,7 +2,7 @@
   "expo": {
     "name": "Xpress Traslados",
     "slug": "xpress",
-    "version": "1.0.38",
+    "version": "1.0.39",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.xpress.sc",
-      "buildNumber": "44",
+      "buildNumber": "45",
       "infoPlist": {
         "UIBackgroundModes": [
           "location",
@@ -29,7 +29,7 @@
     },
     "android": {
       "package": "com.xpress.sc",
-      "versionCode": 44,
+      "versionCode": 45,
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": [
         "android.permission.CAMERA"
