@@ -391,7 +391,8 @@ export async function listNearbyOffers(params: {
   });
   if (!driver) return { ok: false as const, error: "Driver not found" };
 
-  const radiusKm = params.radiusM / 1000;
+  const effectiveRadiusM = Math.max(50_000, Number(params.radiusM || 50_000));
+  const radiusKm = effectiveRadiusM / 1000;
   const box = boundingBoxKm({ lat: params.center.lat, lng: params.center.lng }, radiusKm);
 
   const isMotoCategory = params.serviceType === "MOTO" || params.serviceType === "MOTO_CARGA";
@@ -445,7 +446,7 @@ export async function listNearbyOffers(params: {
         distanceMeters: Math.round(dist),
       };
     })
-    .filter((x) => x.distanceMeters <= params.radiusM)
+    .filter((x) => x.distanceMeters <= effectiveRadiusM)
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
     .slice(0, 100);
 
@@ -502,16 +503,9 @@ export async function commitOffer(params: { userId: string; offerId: string; coo
       }),
       prisma.driverProfile.update({ where: { id: driver.id }, data: { isAvailable: true } }),
     ]);
+  } else if (!driver.isAvailable) {
+    await prisma.driverProfile.update({ where: { id: driver.id }, data: { isAvailable: true } });
   }
-
-  // Si no hay coords, dependemos del estado persistido.
-  if (!params.coords && !driver.isAvailable) return { ok: false as const, error: "Driver not available" };
-
-  if (!params.coords && !driver.location) return { ok: false as const, error: "Driver location missing" };
-
-  const driverCoords = params.coords
-    ? { lat: params.coords.lat, lng: params.coords.lng }
-    : { lat: Number(driver.location!.lat), lng: Number(driver.location!.lng) };
 
   const offer = await prisma.rideOffer.findUnique({
     where: { id: params.offerId },
@@ -520,8 +514,15 @@ export async function commitOffer(params: { userId: string; offerId: string; coo
   if (!offer) return { ok: false as const, error: "Offer not found" };
   if (offer.status !== OfferStatus.OPEN) return { ok: false as const, error: "Offer is not available" };
 
+  const driverCoords = params.coords
+    ? { lat: params.coords.lat, lng: params.coords.lng }
+    : driver.location && Number.isFinite(Number(driver.location.lat)) && Number.isFinite(Number(driver.location.lng))
+      ? { lat: Number(driver.location.lat), lng: Number(driver.location.lng) }
+      : { lat: Number(offer.pickupLat), lng: Number(offer.pickupLng) };
+
   const dist = haversineDistanceMeters(driverCoords, { lat: Number(offer.pickupLat), lng: Number(offer.pickupLng) });
-  if (dist > offer.searchRadiusM) return { ok: false as const, error: "Offer out of radius" };
+  const maxRadius = Math.max(offer.searchRadiusM || 2000, 50_000);
+  if (dist > maxRadius) return { ok: false as const, error: "Offer out of radius" };
 
   const pricingType = pricingServiceTypeFor(offer.serviceTypeWanted);
   const pricing = await prisma.pricingConfig.findUnique({ where: { serviceMode_serviceType: { serviceMode: offer.serviceModeWanted, serviceType: pricingType } } });

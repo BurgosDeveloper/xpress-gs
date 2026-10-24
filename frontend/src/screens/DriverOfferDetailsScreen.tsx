@@ -152,13 +152,8 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
         const isMine = found.candidates.some((c: any) => c.driverId === auth.user?.id || c.status === "OFFERED");
         if (isMine) setAlreadyOffered(true);
       }
-      if (found.pickupLat && found.dropoffLat) {
-        const p = { lat: Number(found.pickupLat), lng: Number(found.pickupLng) };
-        const d = { lat: Number(found.dropoffLat), lng: Number(found.dropoffLng) };
-        if (Number.isFinite(p.lat) && Number.isFinite(p.lng) && Number.isFinite(d.lat) && Number.isFinite(d.lng)) {
-          const r = await getDrivingRoute({ from: p, to: d });
-          if (r?.path?.length) setRoutePath(r.path.map((pt) => ({ lat: pt.latitude, lng: pt.longitude })));
-        }
+      if (Array.isArray(found.routePath) && found.routePath.length >= 2) {
+        setRoutePath(found.routePath);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo cargar la oferta");
@@ -210,15 +205,25 @@ export function DriverOfferDetailsScreen({ route, navigation }: Props) {
     setError(null);
 
     try {
-      const ok = await ensureForegroundPermission();
       let coords: { lat: number; lng: number } | null = null;
-      if (ok) {
-        coords = (await getLastKnownCoords()) || (await getCurrentCoords());
+      try {
+        const ok = await ensureForegroundPermission();
+        if (ok) {
+          coords = await getLastKnownCoords();
+          if (!coords) {
+            coords = await Promise.race([
+              getCurrentCoords(),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+            ]);
+          }
+        }
+      } catch {
+        // Si falla el GPS local, el backend usa la última ubicación guardada del ejecutivo
       }
 
       if (isOfferEntity) {
-        if (!coords) throw new Error("Necesitás habilitar la ubicación para aceptar la oferta");
-        await apiCommitOffer(token, offerId, { lat: coords.lat, lng: coords.lng });
+        const fallbackCoords = coords ?? (pickup ? { lat: pickup.lat, lng: pickup.lng } : { lat: 7.7669, lng: -72.225 });
+        await apiCommitOffer(token, offerId, { lat: fallbackCoords.lat, lng: fallbackCoords.lng });
         Alert.alert("¡Oferta aceptada!", "Te comprometiste con la contraoferta del cliente.");
       } else {
         await apiDriverOfferRide(token, {

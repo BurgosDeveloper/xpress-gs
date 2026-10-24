@@ -10,8 +10,37 @@ import {
 } from "./incoming";
 import { SOUND_NAMES } from "./channels";
 import { isSoundName } from "./channels";
+import { bridgeNotificationDataToRealtime } from "../realtime/socket";
 
 const LOCAL_MARKER_KEY = "__xpress_local";
+
+type NotificationTapHandler = (data: Record<string, any>) => void;
+let notificationTapHandler: NotificationTapHandler | null = null;
+let pendingNotificationTapData: Record<string, any> | null = null;
+
+export function setNotificationTapHandler(handler: NotificationTapHandler | null) {
+  notificationTapHandler = handler;
+  if (handler && pendingNotificationTapData) {
+    const data = pendingNotificationTapData;
+    pendingNotificationTapData = null;
+    try {
+      handler(data);
+    } catch {
+      // ignore
+    }
+  }
+}
+
+function extractNotificationData(notification: Notifications.Notification | null | undefined): Record<string, any> {
+  if (!notification) return {};
+  const content: any = notification?.request?.content ?? {};
+  const trigger: any = notification?.request?.trigger ?? {};
+  const remoteData: any = trigger?.remoteMessage?.data ?? trigger?.data ?? null;
+  return {
+    ...(remoteData && typeof remoteData === "object" ? remoteData : null),
+    ...(content?.data && typeof content.data === "object" ? content.data : null),
+  };
+}
 
 function envFlagEnabled(value: string | undefined, defaultValue: boolean) {
   if (value == null) return defaultValue;
@@ -94,6 +123,25 @@ export function setupInAppSoundOnce() {
   // OJO: las notificaciones locales que generamos desde Task se marcan y se ignoran.
   Notifications.addNotificationReceivedListener((notification) => {
     void handleIncomingSoundEventFromNotification(notification);
+    if (!isLocalForHandler(notification)) {
+      const data = extractNotificationData(notification);
+      bridgeNotificationDataToRealtime(data);
+    }
+  });
+
+  Notifications.addNotificationResponseReceivedListener((response) => {
+    const notification = response?.notification;
+    const data = extractNotificationData(notification);
+    bridgeNotificationDataToRealtime(data);
+    if (notificationTapHandler) {
+      try {
+        notificationTapHandler(data);
+      } catch {
+        // ignore
+      }
+    } else {
+      pendingNotificationTapData = data;
+    }
   });
 }
 

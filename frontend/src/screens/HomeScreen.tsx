@@ -126,17 +126,21 @@ export function HomeScreen({ navigation }: Props) {
     }
   }
 
-  async function refreshOffersMeta(opts?: { showLoading?: boolean }) {
+  async function refreshOffersMeta(opts?: { showLoading?: boolean; rideIdOverride?: string }) {
     if (!token) return;
     if (role !== "USER") return;
-    if (!offersRideId) return;
+    const targetRideId = opts?.rideIdOverride ?? offersRideId;
+    if (!targetRideId) return;
 
     const mySeq = ++offersRideRefreshSeqRef.current;
     const showSpinner = opts?.showLoading ?? offersRideFirstLoadRef.current;
     if (showSpinner) setOffersRideLoading(true);
 
     try {
-      const rideRes = await apiGetRideById(token, { rideId: offersRideId });
+      const [rideRes, offersRes] = await Promise.all([
+        apiGetRideById(token, { rideId: targetRideId }),
+        apiGetRideOffers(token, { rideId: targetRideId }),
+      ]);
       if (mySeq !== offersRideRefreshSeqRef.current) return;
 
       const status = rideRes.ride?.status as string | undefined;
@@ -150,8 +154,11 @@ export function HomeScreen({ navigation }: Props) {
         return;
       }
 
-      const offersRes = await apiGetRideOffers(token, { rideId: offersRideId });
-      if (mySeq !== offersRideRefreshSeqRef.current) return;
+      if (offersRideId !== targetRideId) {
+        setOffersRideId(targetRideId);
+        void setActiveRideOffersRideId(targetRideId);
+      }
+
       setOffersRideCount(Array.isArray(offersRes.items) ? offersRes.items.length : 0);
 
       const items = Array.isArray(offersRes.items) ? offersRes.items : [];
@@ -166,22 +173,19 @@ export function HomeScreen({ navigation }: Props) {
         if (passengerSeenRideOfferDriverIdsRef.current.has(driverId)) continue;
         passengerSeenRideOfferDriverIdsRef.current.add(driverId);
 
-        const eventId = `RIDE_OFFERED:${offersRideId}:${driverId}`;
+        const eventId = `RIDE_OFFERED:${targetRideId}:${driverId}`;
         void notifyAndPlayInAppOnce({
           eventId,
           soundName: "aceptar_servicio",
           title: "Nueva oferta",
           body: fullName ? `${fullName} se ofreció.` : "Un ejecutivo se ofreció.",
-          data: { rideId: offersRideId, driverId, type: "RIDE_OFFERED" },
+          data: { rideId: targetRideId, driverId, type: "RIDE_OFFERED" },
         });
       }
 
       passengerRideOffersInitializedRef.current = true;
     } catch {
-      await clearActiveRideOffersRideId();
-      if (mySeq !== offersRideRefreshSeqRef.current) return;
-      setOffersRideId(null);
-      setOffersRideCount(0);
+      // No borramos offersRideId ante fallos temporales de red al despertar de segundo plano.
     } finally {
       if (mySeq !== offersRideRefreshSeqRef.current) return;
       if (showSpinner) setOffersRideLoading(false);
@@ -364,12 +368,14 @@ export function HomeScreen({ navigation }: Props) {
           // best-effort: persistimos y seteamos estado local
           void setActiveRideOffersRideId(rideId);
           setOffersRideId(rideId);
+          void refreshOffersMeta({ showLoading: false, rideIdOverride: rideId });
         }
 
         if (!rideId || status !== "OPEN" || matched) {
           // Si ya no aplica, limpiamos el puntero.
           void clearActiveRideOffersRideId();
           setOffersRideId(null);
+          setOffersRideCount(0);
         }
 
         if (!rideId) {
@@ -437,19 +443,33 @@ export function HomeScreen({ navigation }: Props) {
     }
 
     try {
-      const coords = await ensureDriverCoords();
-      setDriverCoords(coords);
-
-      // Best-effort: si falla ubicación en backend, igual intentamos listar.
-      try {
-        await apiDriverUpsertLocation(token!, coords);
-      } catch {
-        // ignore
+      // Obtener última coordenada conocida sin bloquear por GPS frío
+      let fastCoords = driverCoords;
+      if (!fastCoords) {
+        try {
+          fastCoords = await getLastKnownCoords();
+          if (fastCoords) setDriverCoords(fastCoords);
+        } catch {
+          // ignore
+        }
       }
 
+      // Actualizar GPS real y backend en segundo plano sin bloquear la lista de servicios
+      void (async () => {
+        try {
+          const freshCoords = await ensureDriverCoords();
+          setDriverCoords(freshCoords);
+          await apiDriverUpsertLocation(token!, freshCoords);
+        } catch {
+          // ignore
+        }
+      })();
+
+      const queryCoords = fastCoords ?? { lat: 7.7669, lng: -72.225 };
+
       const [reqRes, offersRes] = await Promise.allSettled([
-        apiDriverNearbyRideRequests(token, { radiusM: matchingRadiusM, take: 10 }),
-        apiNearbyOffers(token, { lat: coords.lat, lng: coords.lng, radiusM: matchingRadiusM }),
+        apiDriverNearbyRideRequests(token, { radiusM: matchingRadiusM, take: 20 }),
+        apiNearbyOffers(token, { lat: queryCoords.lat, lng: queryCoords.lng, radiusM: matchingRadiusM }),
       ]);
 
       if (reqRes.status === "fulfilled") {
@@ -684,11 +704,14 @@ export function HomeScreen({ navigation }: Props) {
 
     void refreshRide({ showLoading: false });
 
-    if (role === "USER" && offersRideId && (!payloadRideId || payloadRideId === offersRideId)) {
-      void refreshOffersMeta({ showLoading: false });
-    }
-
     if (role === "USER") {
+      const targetOfferRideId =
+        payloadRideId ||
+        offersRideId ||
+        (attentionRide?.status === "OPEN" && !attentionRide?.matchedDriverId ? String(attentionRide.id) : "");
+      if (targetOfferRideId) {
+        void refreshOffersMeta({ showLoading: false, rideIdOverride: targetOfferRideId });
+      }
       void refreshMyOffers();
     }
   };
@@ -706,14 +729,15 @@ export function HomeScreen({ navigation }: Props) {
     return () => {
       for (const cleanup of cleanups) cleanup();
     };
-  }, [token, isFocused, role, offersRideId, matchingRadiusM]);
+  }, [token, isFocused, role, offersRideId, attentionRide?.id, attentionRide?.status, matchingRadiusM]);
 
   useEffect(() => {
     if (!token) return;
     if (!isFocused) return;
 
-    const sub = AppState.addEventListener("change", (nextState) => {
-      if (nextState !== "active") return;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const runActiveSync = () => {
       void refreshRide({ showLoading: false });
 
       if ((role as any) === "DRIVER") {
@@ -722,14 +746,27 @@ export function HomeScreen({ navigation }: Props) {
 
       if (role === "USER") {
         void refreshMyOffers();
-        if (offersRideId) void refreshOffersMeta({ showLoading: false });
+        const targetId =
+          offersRideId ||
+          (attentionRide?.status === "OPEN" && !attentionRide?.matchedDriverId ? String(attentionRide.id) : "");
+        if (targetId) void refreshOffersMeta({ showLoading: false, rideIdOverride: targetId });
       }
+    };
+
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState !== "active") return;
+      runActiveSync();
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(() => {
+        runActiveSync();
+      }, 1500);
     });
 
     return () => {
+      if (retryTimer) clearTimeout(retryTimer);
       sub.remove();
     };
-  }, [token, isFocused, role, offersRideId, matchingRadiusM]);
+  }, [token, isFocused, role, offersRideId, attentionRide?.id, attentionRide?.status, matchingRadiusM]);
 
   // Track driver location passively while on Home Screen
   useEffect(() => {
@@ -1294,11 +1331,28 @@ export function HomeScreen({ navigation }: Props) {
   const scrollPadBottom = 120;
 
   if ((role as any) === "DRIVER") {
+    const combinedDriverRequests = [
+      ...nearbyRequests,
+      ...nearbyOffers.map((o) => ({
+        rideId: o.offerId,
+        offerId: o.offerId,
+        isCounterOffer: true,
+        serviceTypeWanted: o.serviceTypeWanted,
+        pickup: o.pickup,
+        dropoff: o.dropoff,
+        estimatedPrice: o.offeredPrice || o.estimatedPrice,
+        passenger: o.passenger,
+        distanceMeters: o.distanceMeters,
+        createdAt: o.createdAt,
+        routePath: (o as any).routePath,
+      })),
+    ];
+
     return (
       <ErrorBoundary fallbackMessage="Hubo un detalle en la pantalla de chofer. Tocá para recargar." onReset={() => void refreshRide({ showLoading: true })}>
         <DriverHomeView
           attentionRide={attentionRide}
-          nearbyRequests={nearbyRequests}
+          nearbyRequests={combinedDriverRequests}
           completedRides={auth.user?.driver?.completedRidesCount ?? completedRidesCount}
           rating={auth.user?.driver?.avgRating != null ? Number(auth.user.driver.avgRating) : driverRating}
           activeDriversCount={auth.user?.driver?.activeDriversCount}

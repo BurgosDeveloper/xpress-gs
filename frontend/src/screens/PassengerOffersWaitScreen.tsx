@@ -78,7 +78,10 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
     if (showSpinner) setLoading(true);
 
     try {
-      const rideRes = await apiGetRideById(token, { rideId });
+      const [rideRes, res] = await Promise.all([
+        apiGetRideById(token, { rideId }),
+        apiGetRideOffers(token, { rideId }),
+      ]);
       if (mySeq !== refreshSeq.current) return;
 
       const ride = rideRes.ride;
@@ -110,9 +113,6 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
         navigation.replace("PassengerWaiting", { rideId, driverName: matchedName });
         return;
       }
-
-      const res = await apiGetRideOffers(token, { rideId });
-      if (mySeq !== refreshSeq.current) return;
 
       setItems((res.items ?? []) as RideOfferItem[]);
     } catch (e) {
@@ -160,12 +160,19 @@ export function PassengerOffersWaitScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (!token) return;
 
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
     const sub = AppState.addEventListener("change", (nextState) => {
       if (nextState !== "active") return;
       void refresh();
+      if (retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(() => {
+        void refresh();
+      }, 1500);
     });
 
     return () => {
+      if (retryTimer) clearTimeout(retryTimer);
       sub.remove();
     };
   }, [token, rideId]);

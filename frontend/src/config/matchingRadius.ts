@@ -1,6 +1,6 @@
 import type { PublicAppConfig } from "./config.api";
 
-const DEFAULT_MATCHING_RADIUS_M = 2000;
+const DEFAULT_MATCHING_RADIUS_M = 6500;
 const MIN_MATCHING_RADIUS_M = 250;
 const MAX_MATCHING_RADIUS_M = 20000;
 

@@ -194,6 +194,18 @@ export function PassengerHomeView({
                 })()}
 
                 <View style={styles.activeActions}>
+                  {attentionRide.status === "OPEN" && !attentionRide.matchedDriver ? (
+                    <Pressable
+                      style={[styles.actionBtn, { flex: 1.6, backgroundColor: colors.neon, borderColor: colors.neon }]}
+                      onPress={() => onNavigateOffersWait(String(attentionRide.id))}
+                    >
+                      <Ionicons name="people" size={16} color="#FFFFFF" />
+                      <Text style={[styles.actionBtnText, { color: "#FFFFFF", fontWeight: "900" }]}>
+                        {offersRideCount > 0 ? `Ver Postulados (${offersRideCount})` : "Ver Postulados"}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+
                   <Pressable style={[styles.actionBtn, { flex: 1 }]} onPress={() => onNavigateRideDetails(attentionRide.id)}>
                     <Ionicons name="list-outline" size={16} color={colors.neon} />
                     <Text style={styles.actionBtnText}>Detalles</Text>
@@ -393,21 +405,32 @@ export function PassengerHomeView({
         {/* Offers Wait & History */}
         <View style={styles.sectionContainer}>
           <View style={styles.quickActions}>
-            <Pressable
-              style={({ pressed }) => [styles.quickActionBtn, pressed && styles.pressed, (!offersRideId || offersRideLoading) && styles.disabledBtn]}
-              onPress={() => {
-                if (offersRideId) onNavigateOffersWait(offersRideId);
-              }}
-              disabled={!offersRideId || offersRideLoading}
-            >
-              <Ionicons name="people" size={20} color={offersRideId ? colors.neon : colors.mutedText} />
-              <View style={{ marginLeft: 10 }}>
-                <Text style={styles.actionTitle}>Ejecutivos Ofrecidos</Text>
-                <Text style={styles.actionSub}>
-                  {offersRideId ? (offersRideLoading ? `Buscando...` : `${offersRideCount} ofertas recibidas`) : "Sin solicitudes activas"}
-                </Text>
-              </View>
-            </Pressable>
+            {(() => {
+              const effectiveOffersRideId =
+                offersRideId ||
+                (attentionRide?.status === "OPEN" && !attentionRide?.matchedDriverId ? String(attentionRide.id) : null);
+              return (
+                <Pressable
+                  style={({ pressed }) => [styles.quickActionBtn, pressed && styles.pressed, !effectiveOffersRideId && styles.disabledBtn]}
+                  onPress={() => {
+                    if (effectiveOffersRideId) onNavigateOffersWait(effectiveOffersRideId);
+                  }}
+                  disabled={!effectiveOffersRideId}
+                >
+                  <Ionicons name="people" size={20} color={effectiveOffersRideId ? colors.neon : colors.mutedText} />
+                  <View style={{ marginLeft: 10 }}>
+                    <Text style={styles.actionTitle}>Ejecutivos Ofrecidos</Text>
+                    <Text style={styles.actionSub}>
+                      {effectiveOffersRideId
+                        ? offersRideLoading && offersRideCount === 0
+                          ? "Buscando..."
+                          : `${offersRideCount} ofertas recibidas`
+                        : "Sin solicitudes activas"}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })()}
 
             <Pressable
               style={({ pressed }) => [styles.quickActionBtn, pressed && styles.pressed]}

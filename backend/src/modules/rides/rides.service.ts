@@ -659,7 +659,7 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
     ? { lat: Number(driver.location.lat), lng: Number(driver.location.lng) }
     : { lat: 7.7669, lng: -72.225 }; // Default San Cristóbal center fallback
 
-  const effectiveRadiusM = Math.max(10_000, Number(params.radiusM || 50_000));
+  const effectiveRadiusM = Math.max(50_000, Number(params.radiusM || 50_000));
   const radiusKm = effectiveRadiusM / 1000;
   const box = boundingBoxKm(center, radiusKm);
 
@@ -711,6 +711,9 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
 
       return {
         rideId: r.id,
+        serviceModeWanted: r.serviceModeWanted,
+        serviceTypeWanted: r.serviceTypeWanted,
+        routePath: (r as any).routePath ?? undefined,
         pickup: {
           ...pickup,
           address: r.pickupAddress ?? undefined,
@@ -744,7 +747,7 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
         distanceMeters: Math.round(dist),
       };
     })
-    .filter((x) => Number.isFinite(x.distanceMeters) && x.distanceMeters <= params.radiusM)
+    .filter((x) => Number.isFinite(x.distanceMeters) && x.distanceMeters <= effectiveRadiusM)
     .sort((a, b) => a.distanceMeters - b.distanceMeters)
     .slice(0, Math.min(100, Math.max(params.take, 1)));
 
@@ -761,7 +764,7 @@ export async function listNearbyRideRequestsForDriver(params: { userId: string; 
         distanceMeters: typeof d === "number" ? d : x.distanceMeters,
       };
     })
-    .filter((x) => x.distanceMeters <= params.radiusM)
+    .filter((x) => x.distanceMeters <= effectiveRadiusM)
     .sort((a, b) => a.distanceMeters - b.distanceMeters);
 
   return { ok: true as const, center, radiusM: params.radiusM, items };
@@ -793,10 +796,9 @@ export async function offerRideForDriver(params: {
       }),
       prisma.driverProfile.update({ where: { id: driver.id }, data: { isAvailable: true } }),
     ]);
+  } else if (!driver.isAvailable) {
+    await prisma.driverProfile.update({ where: { id: driver.id }, data: { isAvailable: true } });
   }
-
-  if (!params.coords && !driver.isAvailable) return { ok: false as const, status: 400 as const, error: "Driver not available" };
-  if (!params.coords && !driver.location) return { ok: false as const, status: 400 as const, error: "Driver location missing" };
 
   // Evitar que un chofer con servicio activo siga ofreciendo.
   const activeRide = await prisma.rideRequest.findFirst({
@@ -824,13 +826,17 @@ export async function offerRideForDriver(params: {
     return { ok: false as const, status: 400 as const, error: "Ride is not offerable" };
   }
 
-  if (ride.serviceTypeWanted !== driver.serviceType) {
+  const isMotoDriver = driver.serviceType === "MOTO" || driver.serviceType === "MOTO_CARGA";
+  const isMotoRide = ride.serviceTypeWanted === "MOTO" || ride.serviceTypeWanted === "MOTO_CARGA";
+  if (isMotoDriver !== isMotoRide) {
     return { ok: false as const, status: 400 as const, error: "Ride service type mismatch" };
   }
 
   const driverCoords = params.coords
     ? { lat: params.coords.lat, lng: params.coords.lng }
-    : { lat: Number(driver.location!.lat), lng: Number(driver.location!.lng) };
+    : driver.location && Number.isFinite(Number(driver.location.lat)) && Number.isFinite(Number(driver.location.lng))
+      ? { lat: Number(driver.location.lat), lng: Number(driver.location.lng) }
+      : { lat: Number(ride.pickupLat), lng: Number(ride.pickupLng) };
 
   const dist = haversineDistanceMeters(
     driverCoords,
@@ -1016,9 +1022,6 @@ export async function selectDriver(params: { userId: string; rideId: string; dri
   const credits = await ensureDriverHasMinCredits({ userId: driver.userId, audience: "USER" });
   if (!credits.ok) return { ok: false as const, status: credits.status, error: credits.error };
 
-  if (!driver.isAvailable) return { ok: false as const, error: "Driver not available" };
-  if (!driver.location) return { ok: false as const, error: "Driver location missing" };
-
   // Si el chofer ya tiene un servicio activo, no puede ser seleccionado en otro.
   const driverActiveRide = await prisma.rideRequest.findFirst({
     where: {
@@ -1035,13 +1038,15 @@ export async function selectDriver(params: { userId: string; rideId: string; dri
     return { ok: false as const, error: "Driver has an active ride" };
   }
 
-  const dist = haversineDistanceMeters(
-    { lat: Number(ride.pickupLat), lng: Number(ride.pickupLng) },
-    { lat: Number(driver.location.lat), lng: Number(driver.location.lng) }
-  );
-
-  if (dist > ride.searchRadiusM) {
-    return { ok: false as const, error: "Driver out of radius" };
+  if (driver.location && Number.isFinite(Number(driver.location.lat)) && Number.isFinite(Number(driver.location.lng))) {
+    const dist = haversineDistanceMeters(
+      { lat: Number(ride.pickupLat), lng: Number(ride.pickupLng) },
+      { lat: Number(driver.location.lat), lng: Number(driver.location.lng) }
+    );
+    const maxRadius = Math.max(ride.searchRadiusM || 2000, 50000);
+    if (dist > maxRadius) {
+      return { ok: false as const, error: "Driver out of radius" };
+    }
   }
 
   const offer = await prisma.rideCandidate.findFirst({
@@ -1210,6 +1215,11 @@ export async function confirmRideComplete(params: {
 
   // Descontar créditos al chofer (idempotente). (Se deja para lo último: flag)
   void chargeDriverCreditsForCompletedRide({ rideId: closed.id, now });
+
+  emitToUser(ride.passenger.userId, "ride:changed", { rideId: closed.id, type: "RIDE_COMPLETED" });
+  if (ride.matchedDriver?.userId) {
+    emitToUser(ride.matchedDriver.userId, "ride:changed", { rideId: closed.id, type: "RIDE_COMPLETED" });
+  }
 
   return { ok: true as const, ride: closed };
 }

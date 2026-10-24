@@ -24,7 +24,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "RideDetails">;
 
 type RideRow = any;
 
-export function RideDetailsScreen({ route }: Props) {
+export function RideDetailsScreen({ route, navigation }: Props) {
   const auth = useAuth();
   const token = auth.token;
   const role = auth.user?.role;
@@ -271,10 +271,17 @@ export function RideDetailsScreen({ route }: Props) {
               ) : <Text style={styles.line}>Tel: —</Text>}
 
               {role === "USER" && ride.matchedDriver?.id ? (
-                <Pressable onPress={() => void openDriverTechSheet()} style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
-                >
+                <Pressable onPress={() => void openDriverTechSheet()} style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}>
                   <Ionicons name="id-card-outline" size={18} color={colors.neon} />
                   <Text style={styles.actionText}>Ver ficha técnica</Text>
+                </Pressable>
+              ) : role === "USER" && ride.status === "OPEN" ? (
+                <Pressable
+                  onPress={() => navigation.navigate("PassengerOffersWait", { rideId: String(ride.id) })}
+                  style={({ pressed }) => [styles.actionBtn, { borderColor: colors.neon, backgroundColor: colors.neon }, pressed && styles.pressed]}
+                >
+                  <Ionicons name="people" size={18} color="#FFFFFF" />
+                  <Text style={[styles.actionText, { color: "#FFFFFF" }]}>Ver Ejecutivos Postulados</Text>
                 </Pressable>
               ) : null}
             </Card>

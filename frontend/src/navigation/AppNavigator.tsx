@@ -1,7 +1,8 @@
-import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import React, { useEffect } from "react";
+import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "../auth/AuthContext";
+import { setNotificationTapHandler } from "../notifications/push";
 import { colors } from "../theme/colors";
 import { LogoMark } from "../components/LogoMark";
 import { SplashScreen } from "../screens/SplashScreen";
@@ -70,14 +71,53 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 export function AppNavigator() {
   const auth = useAuth();
+  const role = auth.user?.role;
+
+  useEffect(() => {
+    if (!auth.token || !role) {
+      setNotificationTapHandler(null);
+      return;
+    }
+
+    setNotificationTapHandler((data) => {
+      if (!navigationRef.isReady()) return;
+      const type = data?.type != null ? String(data.type).trim() : "";
+      const rideId = data?.rideId != null ? String(data.rideId).trim() : "";
+      const offerId = data?.offerId != null ? String(data.offerId).trim() : "";
+
+      if (role === "USER" && type === "RIDE_OFFERED" && rideId) {
+        navigationRef.navigate("PassengerOffersWait", { rideId });
+        return;
+      }
+
+      if (role === "DRIVER" && type === "RIDE_AVAILABLE" && rideId) {
+        navigationRef.navigate("DriverOfferDetails", { offerId: rideId });
+        return;
+      }
+
+      if (role === "DRIVER" && type === "OFFER_AVAILABLE" && offerId) {
+        navigationRef.navigate("DriverOfferDetails", { offerId });
+        return;
+      }
+
+      if (type === "CHAT_MESSAGE" && rideId) {
+        navigationRef.navigate("Chat", { rideId });
+      }
+    });
+
+    return () => {
+      setNotificationTapHandler(null);
+    };
+  }, [auth.token, role]);
 
   if (!auth.bootstrapped) return <SplashScreen />;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={({ navigation, route }) => ({
           headerStyle: { backgroundColor: colors.bg },

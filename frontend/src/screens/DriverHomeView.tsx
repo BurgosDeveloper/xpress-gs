@@ -251,15 +251,18 @@ export function DriverHomeView({
         </View>
 
         {nearbyRequests.map((req, idx) => {
-          const rideId = String(req.rideId || req.id || req.ride?.id || "");
-          const serviceType = req.serviceTypeWanted || req.serviceType || req.ride?.serviceTypeWanted || req.ride?.serviceType || "TRASLADO";
-          const isOffer = req.type === "OFFER" || req.status === "OFFERED" || req.ride?.status === "OFFERED" || req.myOffer?.status === "OFFERED";
+          const rideId = String(req.rideId || req.offerId || req.id || req.ride?.id || "");
+          const serviceMode = req.serviceModeWanted || req.ride?.serviceModeWanted || "";
+          const serviceType = serviceMode || req.serviceTypeWanted || req.serviceType || req.ride?.serviceTypeWanted || req.ride?.serviceType || "TRASLADO";
+          const isAlreadyOffered = req.status === "OFFERED" || req.ride?.status === "OFFERED" || req.myOffer?.status === "OFFERED";
+          const isCounterOffer = Boolean(req.isCounterOffer || req.type === "OFFER");
           
           let icon = "car";
           let color = "#FF9800"; // Traslado default
           if (serviceType === "DELIVERY") { icon = "cube"; color = "#4CAF50"; }
           if (serviceType === "ENVIO") { icon = "cube"; color = "#2196F3"; }
-          if (isOffer) { icon = "hand-right"; color = "#9C27B0"; }
+          if (isCounterOffer) { icon = "cash"; color = "#FF9800"; }
+          if (isAlreadyOffered) { icon = "hand-right"; color = "#9C27B0"; }
 
           const pLat = Number(req.pickup?.lat ?? req.pickupLat ?? req.ride?.pickupLat);
           const pLng = Number(req.pickup?.lng ?? req.pickupLng ?? req.ride?.pickupLng);
@@ -282,6 +285,7 @@ export function DriverHomeView({
                     <MiniRouteMap
                       pickup={{ lat: pLat, lng: pLng }}
                       dropoff={{ lat: dLat, lng: dLng }}
+                      routePath={req.routePath}
                       height={130}
                     />
                   </View>
@@ -316,7 +320,7 @@ export function DriverHomeView({
                   <View style={styles.reqTypeRow}>
                     <Ionicons name={icon as any} size={16} color={color} />
                     <Text style={[styles.reqType, { color, fontSize: 13 }]}>
-                      {isOffer ? "Contraoferta" : serviceType}
+                      {isCounterOffer ? "Contraoferta" : isAlreadyOffered ? `${serviceType} • Postulado` : serviceType}
                     </Text>
                   </View>
                   <Text style={styles.reqPrice}>{priceDisplay}</Text>
@@ -339,12 +343,12 @@ export function DriverHomeView({
 
                 <View style={{ alignItems: "flex-end", marginTop: 4 }}>
                   <Pressable
-                    style={[styles.acceptBtn, isOffer && { backgroundColor: "rgba(255,255,255,0.15)", borderColor: GLASS_BORDER }]}
+                    style={[styles.acceptBtn, isAlreadyOffered && { backgroundColor: "rgba(255,255,255,0.15)", borderColor: GLASS_BORDER }]}
                     onPress={() => rideId && onNavigateOfferDetails(rideId)}
-                    disabled={isOffer}
+                    disabled={isAlreadyOffered}
                   >
-                    <Text style={[styles.acceptBtnText, isOffer && { color: colors.mutedText }]}>
-                      {isOffer ? "Postulado" : "Postularme"}
+                    <Text style={[styles.acceptBtnText, isAlreadyOffered && { color: colors.mutedText }]}>
+                      {isAlreadyOffered ? "Postulado" : isCounterOffer ? "Aceptar Oferta" : "Postularme"}
                     </Text>
                   </Pressable>
                 </View>

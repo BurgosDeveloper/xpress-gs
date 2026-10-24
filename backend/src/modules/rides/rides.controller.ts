@@ -24,6 +24,8 @@ import {
   notifyPassengerArrived,
 } from "./rides.service";
 import { prisma } from "../../db/prisma";
+import { emitToUser, emitToUsers } from "../../realtime/realtime";
+import { sendPushToUser } from "../notifications/notifications.service";
 
 export async function getActiveRideController(req: Request, res: Response) {
   const requesterId = req.user?.id;
@@ -256,7 +258,11 @@ export async function cancelRideController(req: Request, res: Response) {
   const rideId = req.params.rideId;
   const ride = await prisma.rideRequest.findUnique({
     where: { id: rideId },
-    include: { passenger: { select: { userId: true } } },
+    include: {
+      passenger: { select: { userId: true } },
+      matchedDriver: { select: { userId: true } },
+      candidates: { select: { driver: { select: { userId: true } } } },
+    },
   });
 
   if (!ride) return res.status(404).json({ message: "Ride not found" });
@@ -269,6 +275,44 @@ export async function cancelRideController(req: Request, res: Response) {
     where: { id: ride.id },
     data: { status: "CANCELLED" },
   });
+
+  emitToUser(userId, "ride:changed", { rideId: updated.id, type: "RIDE_CANCELLED" });
+
+  if (ride.matchedDriver?.userId) {
+    emitToUser(ride.matchedDriver.userId, "ride:changed", { rideId: updated.id, type: "RIDE_CANCELLED" });
+    emitToUser(ride.matchedDriver.userId, "driver:nearby:changed", { rideId: updated.id, type: "RIDE_CANCELLED" });
+    void sendPushToUser({
+      userId: ride.matchedDriver.userId,
+      title: "Servicio cancelado",
+      body: "El cliente canceló el servicio.",
+      data: { rideId: updated.id, type: "RIDE_CANCELLED" },
+    });
+  }
+
+  const candidateUserIds = Array.from(
+    new Set((ride.candidates ?? []).map((c) => c.driver?.userId).filter((id): id is string => Boolean(id)))
+  );
+  if (candidateUserIds.length > 0) {
+    emitToUsers(candidateUserIds, "driver:nearby:changed", { rideId: updated.id, type: "RIDE_CANCELLED" });
+    emitToUsers(candidateUserIds, "ride:changed", { rideId: updated.id, type: "RIDE_CANCELLED" });
+  }
+
+  // Notificar también a choferes cercanos que el servicio dejó de estar disponible
+  void (async () => {
+    try {
+      const drivers = await prisma.driverProfile.findMany({
+        where: { status: "APPROVED", user: { is: { isActive: true } } },
+        select: { userId: true },
+        take: 200,
+      });
+      const allDriverUserIds = drivers.map((d) => d.userId);
+      if (allDriverUserIds.length > 0) {
+        emitToUsers(allDriverUserIds, "driver:nearby:changed", { rideId: updated.id, type: "RIDE_CANCELLED" });
+      }
+    } catch {
+      // silencioso
+    }
+  })();
 
   return res.status(200).json({ ok: true, ride: updated });
 }
