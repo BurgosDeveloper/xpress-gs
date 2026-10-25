@@ -3,7 +3,19 @@ import { getAppConfig, normalizeMatchingRadiusM } from "./appConfig.service";
 import { prisma } from "../../db/prisma";
 import { env } from "../../utils/env";
 
-export async function getPublicAppConfigController(_req: Request, res: Response) {
+export async function getPublicAppConfigController(req: Request, res: Response) {
+  const ua = (req.headers["user-agent"] || "").toLowerCase();
+  const platformHeader = (req.headers["x-platform"] || "").toString().toLowerCase();
+  const isIos =
+    platformHeader === "ios" ||
+    ua.includes("cfnetwork") ||
+    ua.includes("darwin") ||
+    ua.includes("iphone") ||
+    ua.includes("ipad");
+
+  const latestVersion = isIos
+    ? ((env as any).LATEST_IOS_VERSION || env.LATEST_APP_VERSION)
+    : env.LATEST_APP_VERSION;
   const cfg = await getAppConfig();
 
   const text = (v: any) => {
@@ -34,7 +46,7 @@ export async function getPublicAppConfigController(_req: Request, res: Response)
       paymentZellePhone: text((cfg as any).paymentZellePhone),
 
       versionInfo: {
-        latestVersion: env.LATEST_APP_VERSION,
+        latestVersion,
         minAndroidBuildNumber: env.MIN_ANDROID_BUILD_NUMBER,
         minIosBuildNumber: env.MIN_IOS_BUILD_NUMBER,
         forceUpdate: env.FORCE_APP_UPDATE,

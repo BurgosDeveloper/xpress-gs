@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { getApiBaseUrl } from "./apiBase";
 
 type ApiErrorLike = {
@@ -86,6 +87,7 @@ export async function apiRequest<T>(params: {
         signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
+          "x-platform": Platform.OS,
           ...(params.token ? { Authorization: `Bearer ${params.token}` } : null),
         },
         body: params.body ? JSON.stringify(params.body) : undefined,

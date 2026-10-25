@@ -81,7 +81,7 @@ export function AppUpdateModal({ versionInfo }: AppUpdateModalProps) {
 
   const storeUrl =
     Platform.OS === "ios"
-      ? versionInfo.appStoreUrl || "https://apps.apple.com/app/id6744026367"
+      ? versionInfo.appStoreUrl || "https://apps.apple.com/app/id6795639078"
       : versionInfo.playStoreUrl || "https://play.google.com/store/apps/details?id=com.xpress.sc";
 
   const storeLabel =
